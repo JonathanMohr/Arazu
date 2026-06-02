@@ -1,0 +1,14 @@
+Checks: >
+  bugprone-*,
+  performance-*,
+  misc-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -misc-confusable-identifiers,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '.*'
