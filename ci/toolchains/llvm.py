@@ -3,8 +3,9 @@ import ci.cache as cache
 import ci.compileCommands as compileCommands
 from ci.defs import BuildMode, ARCH, OS, OPTIMIZATION, PORTABILITY, LINKING, HOST
 
-import subprocess
 from pathlib import Path
+import subprocess
+import shutil
 
 def Parse_Dependency_File(dep_file: Path) -> list[str]:
     if not dep_file.exists():
@@ -267,6 +268,11 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
 
     # Debug information
     if mode.debuginfo:
+        if mode.target_os == OS.Windows:
+            flags.extend([
+                "-Wl,/DEBUG"
+            ])
+
         if mode.lto:
             flags.append("-fno-omit-frame-pointer")
     else:
@@ -448,13 +454,33 @@ def Archive_Objects(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 
     return lib
 
-def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> Path:
+def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> tuple[Path, Path | None]:
     CLANGXX = toolchain.Require_Tool("clang++")
+    
+    llvm_dsymutil = shutil.which("llvm-dsymutil")
+    if llvm_dsymutil:
+        LLVM_DSYMUTIL = llvm_dsymutil
+    else:
+        LLVM_DSYMUTIL = shutil.which("dsymutil")
+
+    if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
 
     if mode.target_os == OS.Windows:
         executable = out_dir / f"{name}.exe"
     else:
         executable = out_dir / f"{name}"
+
+    match mode.target_os:
+        case OS.Windows:
+            debug_info = executable.with_suffix(".pdb")
+
+        case OS.macOS:
+            debug_info = executable.parent / (executable.name + ".dSYM")
+
+        case OS.Linux:
+            debug_info = None
+
+    if not mode.debuginfo: debug_info = None
 
     args: list[str] = [*map(str, objects)]
 
@@ -471,35 +497,74 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 
     args.extend(flags)
 
+    if debug_info and mode.target_os == OS.Windows:
+        args.append(f"-Wl,/PDB:{debug_info}")
+
     args.extend([
         "-o", str(executable)
     ])
 
     content_hash = cache.hash_files([*objects, *libraries], args, self.context.logger)
-    if not self.context.buildCache.is_up_to_date(executable, content_hash):
+
+    rebuild = not self.context.buildCache.is_up_to_date(executable, content_hash)
+    if mode.debuginfo and debug_info:
+        if debug_info.exists():
+            if debug_info.is_dir():
+                if not any(debug_info.rglob("*")):
+                    rebuild = True
+        else:
+            rebuild = True
+    
+    if rebuild:
         self.context.logger.build(f"Linking {executable}")
 
         executable.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run([CLANGXX, *args], check=True)
 
+        if debug_info and mode.debuginfo:
+            match mode.target_os:
+                case OS.Windows:
+                    pass
+
+                case OS.macOS:
+                    subprocess.run([LLVM_DSYMUTIL, str(executable), "-o", str(debug_info)], check=True)
+
+                case _:
+                    self.context.logger.warning("Invalid target for debug info in another file")
+
         self.context.buildCache.update(executable, content_hash)
 
-    return executable
+    return executable, debug_info
 
-def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None]:
+def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None, Path | None]:
     CLANGXX = toolchain.Require_Tool("clang++")
+    
+    llvm_dsymutil = shutil.which("llvm-dsymutil")
+    if llvm_dsymutil:
+        LLVM_DSYMUTIL = llvm_dsymutil
+    else:
+        LLVM_DSYMUTIL = shutil.which("dsymutil")
+
+    if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
 
     match mode.target_os:
         case OS.Windows:
             dylib = out_dir / f"{name}.dll"
             implib = out_dir / f"{name}.lib"
+            debug_info = dylib.with_suffix(".pdb")
 
         case OS.macOS:
             if plugin: dylib = out_dir / f"lib{name}.so"
             else:      dylib = out_dir / f"lib{name}.dylib"
+            implib = None
+            debug_info = dylib.parent / (dylib.name + ".dSYM")
 
         case OS.Linux:
             dylib = out_dir / f"lib{name}.so"
+            implib = None
+            debug_info = None
+
+    if not mode.debuginfo: debug_info = None
 
     args: list[str] = [*map(str, objects)]
 
@@ -525,21 +590,43 @@ def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: lis
 
     args.extend(flags)
 
+    if debug_info and mode.target_os == OS.Windows:
+        args.append(f"-Wl,/PDB:{debug_info}")
+
     args.extend([
         "-o", str(dylib)
     ])
 
+    
+
     content_hash = cache.hash_files([*objects, *libraries], args, self.context.logger)
-    if not self.context.buildCache.is_up_to_date(dylib, content_hash):
+
+    rebuild = not self.context.buildCache.is_up_to_date(dylib, content_hash)
+    if mode.debuginfo and debug_info:
+        if debug_info.exists():
+            if debug_info.is_dir():
+                if not any(debug_info.rglob("*")):
+                    rebuild = True
+        else:
+            rebuild = True
+
+    if rebuild:
         self.context.logger.build(f"Linking {dylib}")
 
         dylib.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run([CLANGXX, *args], check=True)
 
+        if debug_info and mode.debuginfo:
+            match mode.target_os:
+                case OS.Windows:
+                    pass
+
+                case OS.macOS:
+                    subprocess.run([LLVM_DSYMUTIL, str(dylib), "-o", str(debug_info)], check=True)
+
+                case _:
+                    self.context.logger.warning("Invalid target for debug info in another file")
+
         self.context.buildCache.update(dylib, content_hash)
 
-    match mode.target_os:
-        case OS.Windows:
-            return dylib, implib
-        case _:
-            return dylib, None
+    return dylib, implib, debug_info
