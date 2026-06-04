@@ -5,23 +5,30 @@ from pathlib import Path
 import shutil
 
 class Toolchain:
-    # self, mode, src, src_rel, out_dir
-    Compile_C_Source: Callable[["Toolchain", BuildMode, Path, Path, Path], Path]
-    Compile_CPP_Source: Callable[["Toolchain", BuildMode, Path, Path, Path], Path]
+    # self, mode, src, src_rel, out_dir -> object
+    type Compile_Function = Callable[["Toolchain", BuildMode, Path, Path, Path], Path]
+    # self, mode, objects, name, out_dir -> lib
+    type Archive_Function = Callable[["Toolchain", BuildMode, list[Path], str, Path], Path]
+    # self, mode, objects, libraries, name, out_dir -> executable
+    type Link_Executable_Function = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path], Path]
+    # self, mode, objects, libraries, name, out_dir, plugin -> dylib, implib | None
+    type Link_DynamicLibrary_Function = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path, bool], tuple[Path, Path | None]]
 
-    # self, mode, objects, name, out_dir
-    Archive_Objects: Callable[["Toolchain", BuildMode, list[Path], str, Path], Path]
+    _Compile_C_Source: Compile_Function
+    _Compile_CPP_Source: Compile_Function
+    _Archive_Objects: Archive_Function
+    _Link_Executable: Link_Executable_Function
+    _Link_DynamicLibrary: Link_DynamicLibrary_Function
 
-    # self, mode, objects, libraries, name, out_dir
-    Link_Executable: Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path], Path]
-
-    # self, mode, objects, libraries, name, out_dir, plugins -> dylib, implib | None
-    Link_DynamicLibrary: Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path, bool], tuple[Path, Path | None]]
-
-    def __init__(self, context: BuildContext):
+    def __init__(self, context: BuildContext,
+                 Compile_C_Source: Compile_Function,
+                 Compile_CPP_Source: Compile_Function,
+                 Archive_Objects: Archive_Function,
+                 Link_Executable: Link_Executable_Function,
+                 Link_DynamicLibrary: Link_DynamicLibrary_Function):
         self.context = context
 
-        self.defines: list[str, str] = []
+        self.defines: list[tuple[str, str]] = []
         self.includeDirs: list[Path] = []
         self.libraryDirs: list[Path] = []
         self.libraries: list[str] = []
@@ -29,13 +36,19 @@ class Toolchain:
         self.stdc: str = "c99"
         self.stdcpp: str = "c++98"
 
+        self._Compile_C_Source = Compile_C_Source
+        self._Compile_CPP_Source = Compile_CPP_Source
+        self._Archive_Objects = Archive_Objects
+        self._Link_Executable = Link_Executable
+        self._Link_DynamicLibrary = Link_DynamicLibrary
+
     def Set_STDC(self, stdc: str):
         self.stdc = stdc
 
     def Set_STDCPP(self, stdcpp: str):
         self.stdcpp = stdcpp
 
-    def Add_Define(self, name: str, value: str = ""):
+    def Add_Define(self, name: str, value: str | None = None):
         self.defines.append((name, value))
 
     def Add_Include_Directory(self, dir: Path):
@@ -46,6 +59,22 @@ class Toolchain:
 
     def Add_Library(self, lib: str):
         self.libraries.append(lib)
+
+    
+    def Compile_C_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
+        return self._Compile_C_Source(self, mode, src, src_rel, out_dir)
+    
+    def Compile_CPP_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
+        return self._Compile_CPP_Source(self, mode, src, src_rel, out_dir)
+    
+    def Archive_Objects(self, mode: BuildMode, objects: list[Path], name: str, out_dir: Path) -> Path:
+        return self._Archive_Objects(self, mode, objects, name, out_dir)
+    
+    def Link_Executable(self, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> Path:
+        return self._Link_Executable(self, mode, objects, libraries, name, out_dir)
+    
+    def Link_DynamicLibrary(self, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None]:
+        return self._Link_DynamicLibrary(self, mode, objects, libraries, name, out_dir, plugin)
 
 class ToolchainError(RuntimeError):
     pass

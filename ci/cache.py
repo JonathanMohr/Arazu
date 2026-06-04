@@ -28,6 +28,7 @@ class BuildCache:
         data = {
             "hashes": self.hashes
         }
+        self.cache_file.parent.mkdir(parents=True, exist_ok=True)
         self.cache_file.write_text(json.dumps(data, indent=4, ensure_ascii=False))
 
     def get(self, target: Path) -> Optional[str]:

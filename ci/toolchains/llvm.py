@@ -4,7 +4,6 @@ import ci.compileCommands as compileCommands
 from ci.defs import BuildMode, ARCH, OS, OPTIMIZATION, PORTABILITY, LINKING, HOST
 
 import subprocess
-import shutil
 from pathlib import Path
 
 def Parse_Dependency_File(dep_file: Path) -> list[str]:
@@ -336,7 +335,7 @@ def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_
 
     for define in self.defines:
         k, v = define
-        args.append(f"-D{k}={v}")
+        args.append(f"-D{k}={v}" if v is not None else f"-D{k}")
 
     for includeDirectory in self.includeDirs:
         args.append(f"-I{includeDirectory}")
@@ -379,7 +378,7 @@ def Compile_CPP_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, sr
 
     for define in self.defines:
         k, v = define
-        args.append(f"-D{k}={v}")
+        args.append(f"-D{k}={v}" if v is not None else f"-D{k}")
 
     for includeDirectory in self.includeDirs:
         args.append(f"-I{includeDirectory}")
