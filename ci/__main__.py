@@ -13,6 +13,7 @@ import argparse
 import logging
 import copy
 import shutil
+import platform
 
 def Build_Sources_To_Objects(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, doCompileCommands: bool) -> Path:
     patterns = ["*.c", "*.cpp"]
@@ -209,10 +210,77 @@ def main() -> bool:
 
     argparser = argparse.ArgumentParser()
 
-    # TODO
+    argparser.add_argument(
+        "--os",
+        dest="os",
+        type=str,
+        choices=[
+            "windows", "macos", "linux"
+        ],
+        default=None,
+        help="Set target os"
+    )
+    argparser.add_argument(
+        "--arch",
+        dest="arch",
+        type=str,
+        choices=[
+            "x86-64", "x86_64", "x86",
+            "arm64", "arm"
+        ],
+        default=None,
+        help="Set target arch"
+    )
 
     args = argparser.parse_args()
 
+    logger = logging.getLogger("ci")
+    logger.setLevel(logging.DEBUG)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_formatter = logging.Formatter("[%(levelname)s] %(message)s")
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+
+    host_os = False
+    host_arch = False
+
+    match args.os:
+        case "windows": target_os = OS.Windows
+        case "macos": target_os = OS.macOS
+        case "linux": target_os = OS.Linux
+
+        case None | _:
+            if args.os is not None:
+                logger.warning("Invalid OS")
+            
+            os_uname = platform.system().lower()
+            if (os_uname == "windows"): target_os = OS.Windows
+            elif (os_uname == "darwin"): target_os = OS.macOS
+            elif (os_uname == "linux"): target_os = OS.Linux
+            else:
+                logger.error("Invalid OS")
+                return False
+
+    match args.arch:
+        case "x86-64" | "x86_64" | "x86":
+            target_arch = ARCH.x86_64
+        case "arm64" | "arm":
+            target_arch = ARCH.arm64
+
+        case None | _:
+            if args.arch is not None:
+                logger.warning("Invalid arch")
+            
+            cpu_arch = platform.machine().lower()
+            if (cpu_arch in ["x86_64", "amd64"]): target_arch = ARCH.x86_64
+            elif (cpu_arch in ["arm64", "aarch64"]): target_arch = ARCH.arm64
+            else:
+                logger.error("Invalid arch")
+                return False
+
+    isHost = host_os and host_arch
 
     include_dir = Path("include")
     lib_dir = Path("libs")
@@ -229,15 +297,6 @@ def main() -> bool:
 
     compileCommandsPath = Path("compile_commands.json")
 
-    logger = logging.getLogger("ci")
-    logger.setLevel(logging.DEBUG)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    console_formatter = logging.Formatter("[%(levelname)s] %(message)s")
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
-
 
     buildCache = cacheModule.BuildCache(general_build_dir / "cache.json", logger)
     compileCommands = CompileCommands()
@@ -247,23 +306,6 @@ def main() -> bool:
     toolchain = Get_LLVM_Toolchain(buildContext)
 
     toolchain.Add_Include_Directory(include_dir)
-
-    buildMode = BuildMode(
-        target_os=OS.macOS,
-        target_arch=ARCH.arm64,
-        werror=True,
-        lto=True,
-        pic=False,
-        hidden=False,
-        optimization=OPTIMIZATION.SPEED,
-        portability=PORTABILITY.PORTABLE,
-        linking=LINKING.DYNAMIC,
-        assertions=False,
-        sanitizers=False,
-        debuginfo=False,
-        host=HOST.FREESTANDING,
-        sysroot=None
-    )
 
     dll_libraries: list[Path] = []
 
@@ -281,9 +323,47 @@ def main() -> bool:
             # debuginfo = False except specific library
             # host = specific per lib
 
-            build_dir = specific_build_dir
-            log_dir = specific_log_dir
-        
+            buildMode = BuildMode(
+                target_os=target_os,
+                target_arch=target_arch,
+                werror=True, # set
+                lto=True, # set
+                pic=False, # set
+                hidden=False, # set
+                optimization=OPTIMIZATION.SPEED,
+                portability=PORTABILITY.PORTABLE,
+                linking=LINKING.DYNAMIC,
+                assertions=False, # set
+                sanitizers=False, # set
+                debuginfo=False, # set
+                host=HOST.FREESTANDING, # set
+                sysroot=None
+            )
+
+            match buildMode.target_os:
+                case OS.Windows: target_os_str = "windows"
+                case OS.macOS: target_os_str = "macos"
+                case OS.Linux: target_os_str = "linux"
+
+            match buildMode.target_arch:
+                case ARCH.x86_64: target_arch_str = "x86_64"
+                case ARCH.arm64: target_arch_str = "arm64"
+
+            match buildMode.optimization:
+                case OPTIMIZATION.SPEED: optimization_str = "speed"
+                case OPTIMIZATION.SIZE: optimization_str = "size"
+
+            match buildMode.portability:
+                case PORTABILITY.PORTABLE: portability_str = "portable"
+                case PORTABILITY.MACHINE: portability_str = "machine"
+
+            match buildMode.linking:
+                case LINKING.STATIC: linking_str = "static"
+                case LINKING.DYNAMIC: linking_str = "dynamic"
+
+            build_dir = specific_build_dir / target_os_str / target_arch_str / optimization_str / portability_str / linking_str
+            log_dir = specific_log_dir / target_os_str / target_arch_str / optimization_str / portability_str / linking_str
+
             if buildMode.target_os == OS.Windows:
                 windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll", True)
                 dll_libraries.append(windows_dll)
