@@ -41,7 +41,9 @@ class BuildMode:
     werror: bool
 
     lto: bool
+
     pic: bool
+    hidden: bool
 
     optimization: OPTIMIZATION
     portability: PORTABILITY

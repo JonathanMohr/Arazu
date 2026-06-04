@@ -39,7 +39,10 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
     if mode.lto: flags.append("-flto=full")
 
     # pic
-    if mode.pic: flags.append("-fPIC")
+    if mode.pic and mode.target_os != OS.Windows: flags.append("-fPIC")
+
+    # hidden
+    if mode.hidden: flags.append("-fvisibility=hidden")
 
     # Optimization
     Useful_Flags = [
@@ -173,14 +176,20 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
     # Optimization
     Useful_Flags: list[str] = []
 
-    if not mode.lto:
-        Useful_Flags.extend([
-            "-Wl,-O2"
-        ])
+    if mode.lto:
+        if mode.target_os != OS.Windows:
+            Useful_Flags.extend([
+                "-Wl,-O2"
+            ])
 
+    if mode.target_os == OS.Windows:
+        Useful_Flags.extend([
+            "-Wl,/OPT:REF",
+            "-Wl,/OPT:ICF"
+        ])
     if mode.target_os == OS.macOS:
         Useful_Flags.append("-Wl,-dead_strip")
-    else:
+    elif mode.target_os == OS.Linux:
         Useful_Flags.extend([
             "-Wl,--gc-sections",
             "-Wl,--as-needed"
@@ -190,8 +199,12 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
         case OPTIMIZATION.NONE:
             if mode.lto:
                 flags.extend([
-                    "-Wl,-O0"
+                    "-O0"
                 ])
+                if mode.target_os != OS.Windows:
+                    flags.extend([
+                        "-Wl,-O0"
+                    ])
 
         case OPTIMIZATION.SPEED:
             if mode.lto:
@@ -263,13 +276,18 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
             else:
                 flags.append("-fomit-frame-pointer")
 
-        if mode.target_os == OS.macOS:
+        if mode.target_os == OS.Windows:
+            flags.extend([
+                "-Wl,/DEBUG:NONE"
+            ])
+
+        elif mode.target_os == OS.macOS:
             flags.extend([
                 "-Wl,-x",
                 "-Wl,-S"
             ])
 
-        else:
+        elif mode.target_os == OS.Linux:
             flags.extend([
                 "-Wl,--strip-all"
             ])
@@ -495,11 +513,14 @@ def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: lis
 
     flags: list[str] = Get_Link_Flags(mode)
     flags.append(f"--target={Get_Target(mode)}")
-    flags.append("-shared")
+    if mode.target_os == OS.Windows:
+        flags.append("-Wl,/DLL")
+    else:
+        flags.append("-shared")
 
     if mode.target_os == OS.Windows:
         flags.append(f"-Wl,/IMPLIB:{implib}")
-    elif mode.target_os == OS.Linux:
+    elif mode.target_os == OS.macOS:
         flags.append(f"-Wl,-install_name,@rpath/lib{name}.dylib")
 
     args.extend(flags)
