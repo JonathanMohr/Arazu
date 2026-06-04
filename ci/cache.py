@@ -9,7 +9,6 @@ class BuildCache:
         self.cache_file = cache_file
 
         self.hashes: Dict[str, str] = {}
-        self.tests: Dict[str, Dict] = {}
 
         self.logger = logger
 
