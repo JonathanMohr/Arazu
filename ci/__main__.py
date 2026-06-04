@@ -162,6 +162,48 @@ def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
     else:
         logger.warning(f"{src} does not exist")
 
+
+def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]):
+    license_path = Path("LICENSE")
+    
+    if dist_dir.exists(): shutil.rmtree(str(dist_dir))
+
+    license = dist_dir / "LICENSE"
+
+    include_dir = dist_dir / "include"
+    lib_dir = dist_dir / "lib"
+
+    lib_dir.mkdir(parents=True, exist_ok=True)
+
+    # License
+    Copy_Path(logger, license_path, license)
+
+    # Include directory
+    Copy_Path(logger, include_path, include_dir)
+
+    # Libraries
+    for library in libraries:
+        dynamic_libraries, static_libraries = library
+
+        for dynamic_library in dynamic_libraries:
+            dylib, implib, debug_info = dynamic_library
+
+            dst_dylib = lib_dir / dylib.name
+            Copy_Path(logger, dylib, dst_dylib)
+
+            if implib is not None:
+                dst_implib = lib_dir / implib.name
+                Copy_Path(logger, implib, dst_implib)
+
+            if debug_info is not None:
+                dst_debug_info = lib_dir / debug_info.name
+                Copy_Path(logger, debug_info, dst_debug_info)
+
+        for static_library in static_libraries:
+            dst_static_library = lib_dir / static_library.name
+            Copy_Path(logger, static_library, dst_static_library)
+
+
 def main() -> bool:
     dist_build = True
 
@@ -174,6 +216,7 @@ def main() -> bool:
 
     include_dir = Path("include")
     lib_dir = Path("libs")
+
     os_dir = Path("os")
     windows_dir = os_dir / "windows"
 
@@ -245,34 +288,15 @@ def main() -> bool:
                 windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll", True)
                 dll_libraries.append(windows_dll)
 
-            core_dynamic_libraries, core_static_libraries = Build_Dist_Library(logger, toolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")
+            coreLibrary = Build_Dist_Library(logger, toolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")
 
-            if dist_dir.exists(): shutil.rmtree(str(dist_dir))
+            Stage(logger, dist_dir, include_dir, [coreLibrary])
 
-            dist_lib_dir = dist_dir / "lib"
-            dist_lib_dir.mkdir(parents=True, exist_ok=True)
-            for core_dynamic_library in core_dynamic_libraries:
-                core_dylib, core_implib, core_debug_info = core_dynamic_library
-
-                dst_dylib = dist_lib_dir / core_dylib.name
-                Copy_Path(logger, core_dylib, dst_dylib)
-
-                if core_implib is not None:
-                    dst_implib = dist_lib_dir / core_implib.name
-                    Copy_Path(logger, core_implib, dst_implib)
-
-                if core_debug_info is not None:
-                    dst_debug_info = dist_lib_dir / core_debug_info.name
-                    Copy_Path(logger, core_debug_info, dst_debug_info)
-
-            for core_static_library in core_static_libraries:
-                dst_static_lib = dist_lib_dir / core_static_library.name
-                Copy_Path(logger, core_static_library, dst_static_lib)
         else:
             pass
 
     except Exception as e:
-        print(e)
+        logger.error(f"Build failed: {e}")
 
         buildCache.save()
         return False
