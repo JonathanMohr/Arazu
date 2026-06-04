@@ -5,10 +5,10 @@ from pathlib import Path
 import shutil
 
 class Toolchain:
-    # self, mode, src, src_rel, out_dir -> object
-    type Compile_Function = Callable[["Toolchain", BuildMode, Path, Path, Path], Path]
+    # self, mode, src, src_rel, out_dir, doCompileCommands -> object
+    type Compile_Function = Callable[["Toolchain", BuildMode, Path, Path, Path, bool], Path]
     # self, mode, objects, name, out_dir -> lib
-    type Archive_Function = Callable[["Toolchain", BuildMode, list[Path], str, Path], Path]
+    type Archive_Function = Callable[["Toolchain", BuildMode, list[Path], str, Path, bool], Path]
     # self, mode, objects, libraries, name, out_dir -> executable, debug_info | None
     type Link_Executable_Function = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path], tuple[Path, Path | None]]
     # self, mode, objects, libraries, name, out_dir, plugin -> dylib, implib | None, debug_info | None
@@ -61,11 +61,11 @@ class Toolchain:
         self.libraries.append(lib)
 
     
-    def Compile_C_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
-        return self._Compile_C_Source(self, mode, src, src_rel, out_dir)
+    def Compile_C_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:
+        return self._Compile_C_Source(self, mode, src, src_rel, out_dir, doCompileCommands)
     
-    def Compile_CPP_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
-        return self._Compile_CPP_Source(self, mode, src, src_rel, out_dir)
+    def Compile_CPP_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:
+        return self._Compile_CPP_Source(self, mode, src, src_rel, out_dir, doCompileCommands)
     
     def Archive_Objects(self, mode: BuildMode, objects: list[Path], name: str, out_dir: Path) -> Path:
         return self._Archive_Objects(self, mode, objects, name, out_dir)

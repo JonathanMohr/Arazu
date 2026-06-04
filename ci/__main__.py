@@ -14,7 +14,7 @@ import logging
 import copy
 import shutil
 
-def Build_Sources_To_Objects(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path) -> Path:
+def Build_Sources_To_Objects(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, doCompileCommands: bool) -> Path:
     patterns = ["*.c", "*.cpp"]
 
     files: list[Path] = []
@@ -25,9 +25,9 @@ def Build_Sources_To_Objects(logger: logging.Logger, toolchain: Toolchain, mode:
     for file in files:
         try:
             if file.suffix == ".c":
-                object = toolchain.Compile_C_Source(mode, file, file.relative_to(src_dir), build_dir)
+                object = toolchain.Compile_C_Source(mode, file, file.relative_to(src_dir), build_dir, doCompileCommands)
             elif file.suffix == ".cpp":
-                object = toolchain.Compile_CPP_Source(mode, file, file.relative_to(src_dir), build_dir)
+                object = toolchain.Compile_CPP_Source(mode, file, file.relative_to(src_dir), build_dir, doCompileCommands)
             else:
                 logger.warning(f"Invalid source extension of file {file}")
                 continue
@@ -40,8 +40,8 @@ def Build_Sources_To_Objects(logger: logging.Logger, toolchain: Toolchain, mode:
 
     return objects
 
-def Build_Static_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, name: str) -> Path:
-    objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir)
+def Build_Static_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, name: str, doCompileCommands: bool) -> Path:
+    objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, doCompileCommands)
     
     try:
         lib = toolchain.Archive_Objects(mode, objects, name, build_dir)
@@ -52,8 +52,8 @@ def Build_Static_Library(logger: logging.Logger, toolchain: Toolchain, mode: Bui
     
     return lib
 
-def Build_Dynamic_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, libraries: list[Path], src_dir: Path, build_dir: Path, name: str, plugin: bool = False) -> tuple[Path, Path | None, Path | None]:
-    objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir)
+def Build_Dynamic_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, libraries: list[Path], src_dir: Path, build_dir: Path, name: str, doCompileCommands: bool, plugin: bool = False) -> tuple[Path, Path | None, Path | None]:
+    objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, doCompileCommands)
     
     try:
         dylib, implib, debug_info = toolchain.Link_DynamicLibrary(mode, objects, libraries, name, build_dir, plugin)
@@ -73,7 +73,7 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     static_libs: list[Path] = []
 
     # Release
-    
+
     r_name = f"{name}"
     sr_name = f"{name}s"
     r_build_dir = build_dir / r_name
@@ -90,8 +90,8 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     sr_mode.hidden = True
     sr_mode.debuginfo = False
 
-    r_dynamic_lib, r_import_lib, r_debug_info = Build_Dynamic_Library(logger, toolchain, r_mode, dll_libraries, src_dir, r_build_dir / "dynamic", r_name)
-    r_static_lib = Build_Static_Library(logger, toolchain, sr_mode, src_dir, r_build_dir / "static", sr_name)
+    r_dynamic_lib, r_import_lib, r_debug_info = Build_Dynamic_Library(logger, toolchain, r_mode, dll_libraries, src_dir, r_build_dir / "dynamic", r_name, False)
+    r_static_lib = Build_Static_Library(logger, toolchain, sr_mode, src_dir, r_build_dir / "static", sr_name, False)
 
     dynamic_libs.append((r_dynamic_lib, r_import_lib, r_debug_info))
     static_libs.append(r_static_lib)
@@ -114,8 +114,8 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     srd_mode.hidden = True
     srd_mode.debuginfo = True
 
-    rd_dynamic_lib, rd_import_lib, rd_debug_info = Build_Dynamic_Library(logger, toolchain, rd_mode, dll_libraries, src_dir, rd_build_dir / "dynamic", rd_name)
-    rd_static_lib = Build_Static_Library(logger, toolchain, srd_mode, src_dir, rd_build_dir / "static", srd_name)
+    rd_dynamic_lib, rd_import_lib, rd_debug_info = Build_Dynamic_Library(logger, toolchain, rd_mode, dll_libraries, src_dir, rd_build_dir / "dynamic", rd_name, False)
+    rd_static_lib = Build_Static_Library(logger, toolchain, srd_mode, src_dir, rd_build_dir / "static", srd_name, False)
 
     dynamic_libs.append((rd_dynamic_lib, rd_import_lib, rd_debug_info))
     static_libs.append(rd_static_lib)
@@ -140,8 +140,8 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     sd_mode.hidden = True
     sd_mode.debuginfo = True
 
-    d_dynamic_lib, d_import_lib, d_debug_info = Build_Dynamic_Library(logger, toolchain, d_mode, dll_libraries, src_dir, d_build_dir / "dynamic", d_name)
-    d_static_lib = Build_Static_Library(logger, toolchain, sd_mode, src_dir, d_build_dir / "static", sd_name)
+    d_dynamic_lib, d_import_lib, d_debug_info = Build_Dynamic_Library(logger, toolchain, d_mode, dll_libraries, src_dir, d_build_dir / "dynamic", d_name, True)
+    d_static_lib = Build_Static_Library(logger, toolchain, sd_mode, src_dir, d_build_dir / "static", sd_name, False)
 
     dynamic_libs.append((d_dynamic_lib, d_import_lib, d_debug_info))
     static_libs.append(d_static_lib)
@@ -206,7 +206,7 @@ def main() -> bool:
     toolchain.Add_Include_Directory(include_dir)
 
     buildMode = BuildMode(
-        target_os=OS.Windows,
+        target_os=OS.macOS,
         target_arch=ARCH.arm64,
         werror=True,
         lto=True,
@@ -242,7 +242,7 @@ def main() -> bool:
             log_dir = specific_log_dir
         
             if buildMode.target_os == OS.Windows:
-                windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll")
+                windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll", True)
                 dll_libraries.append(windows_dll)
 
             core_dynamic_libraries, core_static_libraries = Build_Dist_Library(logger, toolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")

@@ -344,7 +344,7 @@ def Get_Target(mode: BuildMode) -> str:
     raise RuntimeError("Unknown combination of target_os and target_arch")
 
 
-def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
+def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:
     CLANG = toolchain.Require_Tool("clang")
 
     out_file = out_dir / f"{src_rel}.o"
@@ -373,7 +373,7 @@ def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_
     deps = Parse_Dependency_File(dep_file)
     content_hash = cache.hash_files([src, *map(Path, deps)], args, self.context.logger)
 
-    self.context.compileCommands.add("clang", compileCommands.Language.C, src, out_file, args)
+    if doCompileCommands: self.context.compileCommands.add("clang", compileCommands.Language.C, src, out_file, args)
     if not self.context.buildCache.is_up_to_date(out_file, content_hash):
         self.context.logger.build(f"Compiling {src} -> {out_file}")
 
@@ -387,7 +387,7 @@ def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_
 
     return out_file
 
-def Compile_CPP_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path) -> Path:
+def Compile_CPP_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:
     CLANGXX = toolchain.Require_Tool("clang++")
 
     out_file = out_dir / f"{src_rel}.o"
@@ -416,7 +416,7 @@ def Compile_CPP_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, sr
     deps = Parse_Dependency_File(dep_file)
     content_hash = cache.hash_files([src, *map(Path, deps)], args, self.context.logger)
 
-    self.context.compileCommands.add("clang++", compileCommands.Language.CPP, src, out_file, args)
+    if doCompileCommands: self.context.compileCommands.add("clang++", compileCommands.Language.CPP, src, out_file, args)
     if not self.context.buildCache.is_up_to_date(out_file, content_hash):
         self.context.logger.build(f"Compiling {src} -> {out_file}")
 
