@@ -1,9 +1,9 @@
 from enum import Enum
 from dataclasses import dataclass
+import logging
 
-class TOOLCHAIN(Enum):
-    LLVM = 2
-
+from ci.cache import BuildCache
+from ci.compileCommands import CompileCommands
 
 class OS(Enum):
     Windows = 1
@@ -33,12 +33,16 @@ class HOST(Enum):
     HOSTED = 1
     FREESTANDING = 2
 
-@dataclass(frozen=True)
+@dataclass()
 class BuildMode:
     target_os: OS
     target_arch: ARCH
 
+    werror: bool
+
     lto: bool
+    pic: bool
+
     optimization: OPTIMIZATION
     portability: PORTABILITY
     linking: LINKING
@@ -50,3 +54,9 @@ class BuildMode:
     host: HOST
 
     sysroot: str | None
+
+@dataclass()
+class BuildContext:
+    logger: logging.Logger
+    buildCache: BuildCache
+    compileCommands: CompileCommands
