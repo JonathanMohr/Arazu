@@ -57,6 +57,8 @@ class BuildMode:
 
     sysroot: str | None
 
+    project_root: str
+
 @dataclass()
 class BuildContext:
     logger: logging.Logger

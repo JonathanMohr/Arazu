@@ -305,8 +305,6 @@ def main() -> bool:
     buildContext = BuildContext(logger, buildCache, compileCommands)
     toolchain = Get_LLVM_Toolchain(buildContext)
 
-    toolchain.Add_Include_Directory(include_dir)
-
     dll_libraries: list[Path] = []
 
     try:
@@ -337,7 +335,8 @@ def main() -> bool:
                 sanitizers=False, # set
                 debuginfo=False, # set
                 host=HOST.FREESTANDING, # set
-                sysroot=None
+                sysroot=None,
+                project_root=str(include_dir.parent.resolve())
             )
 
             match buildMode.target_os:
@@ -368,7 +367,12 @@ def main() -> bool:
                 windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll", True)
                 dll_libraries.append(windows_dll)
 
-            coreLibrary = Build_Dist_Library(logger, toolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")
+            toolchain.Add_Define("ARAZU_BUILD")
+            toolchain.Add_Include_Directory(include_dir)
+
+            coreToolchain = copy.copy(toolchain)
+            coreToolchain.Add_Include_Directory(lib_dir / "core")
+            coreLibrary = Build_Dist_Library(logger, coreToolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")
 
             Stage(logger, dist_dir, include_dir, [coreLibrary])
 

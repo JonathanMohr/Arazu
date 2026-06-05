@@ -26,6 +26,10 @@ def Parse_Dependency_File(dep_file: Path) -> list[str]:
 def Get_Compile_Flags(mode: BuildMode) -> list[str]:
     flags = []
 
+    # Don't leak absolute paths
+    flags.append(f"-fdebug-prefix-map={mode.project_root}=project_root")
+    flags.append(f"-fmacro-prefix-map={mode.project_root}=project_root")
+
     # Warnings
     flags.extend([
         "-Wall", "-Wextra", "-Wpedantic", "-Wconversion", "-Wshadow",
@@ -166,6 +170,9 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
 
 def Get_Link_Flags(mode: BuildMode) -> list[str]:
     flags = ["-fuse-ld=lld"]
+
+    # Don't leak absolute paths
+    flags.append(f"-fdebug-prefix-map={mode.project_root}=project_root")
 
     # werror
 
@@ -500,6 +507,9 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
     if debug_info and mode.target_os == OS.Windows:
         args.append(f"-Wl,/PDB:{debug_info}")
 
+    if mode.lto and mode.target_os == OS.macOS:
+        args.extend([f"-Wl,-object_path_lto,{out_dir}/lto-objects"])
+
     args.extend([
         "-o", str(executable)
     ])
@@ -527,6 +537,7 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
                     pass
 
                 case OS.macOS:
+                    if debug_info.exists(): shutil.rmtree(str(debug_info))
                     subprocess.run([LLVM_DSYMUTIL, str(executable), "-o", str(debug_info)], check=True)
 
                 case _:
@@ -593,6 +604,9 @@ def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: lis
     if debug_info and mode.target_os == OS.Windows:
         args.append(f"-Wl,/PDB:{debug_info}")
 
+    if mode.lto and mode.target_os == OS.macOS:
+        args.extend([f"-Wl,-object_path_lto,{out_dir}/lto-objects"])
+
     args.extend([
         "-o", str(dylib)
     ])
@@ -622,6 +636,7 @@ def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: lis
                     pass
 
                 case OS.macOS:
+                    if debug_info.exists(): shutil.rmtree(str(debug_info))
                     subprocess.run([LLVM_DSYMUTIL, str(dylib), "-o", str(debug_info)], check=True)
 
                 case _:
