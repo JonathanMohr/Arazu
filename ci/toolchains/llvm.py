@@ -464,13 +464,14 @@ def Archive_Objects(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> tuple[Path, Path | None]:
     CLANGXX = toolchain.Require_Tool("clang++")
     
-    llvm_dsymutil = shutil.which("llvm-dsymutil")
-    if llvm_dsymutil:
-        LLVM_DSYMUTIL = llvm_dsymutil
-    else:
-        LLVM_DSYMUTIL = shutil.which("dsymutil")
+    if mode.target_os == OS.macOS:
+        llvm_dsymutil = shutil.which("llvm-dsymutil")
+        if llvm_dsymutil:
+            LLVM_DSYMUTIL = llvm_dsymutil
+        else:
+            LLVM_DSYMUTIL = shutil.which("dsymutil")
 
-    if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
+        if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
 
     if mode.target_os == OS.Windows:
         executable = out_dir / f"{name}.exe"
@@ -550,13 +551,14 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None, Path | None]:
     CLANGXX = toolchain.Require_Tool("clang++")
     
-    llvm_dsymutil = shutil.which("llvm-dsymutil")
-    if llvm_dsymutil:
-        LLVM_DSYMUTIL = llvm_dsymutil
-    else:
-        LLVM_DSYMUTIL = shutil.which("dsymutil")
+    if mode.target_os == OS.macOS:
+        llvm_dsymutil = shutil.which("llvm-dsymutil")
+        if llvm_dsymutil:
+            LLVM_DSYMUTIL = llvm_dsymutil
+        else:
+            LLVM_DSYMUTIL = shutil.which("dsymutil")
 
-    if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
+        if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
 
     match mode.target_os:
         case OS.Windows:
