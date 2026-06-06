@@ -124,7 +124,7 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
         ])
 
     # Sanitizers
-    if mode.sanitizers:
+    if mode.sanitizers: # TODO: Those require libraries
         flags.extend([
             "-ftrapv",
             "-fstack-protector-all",
