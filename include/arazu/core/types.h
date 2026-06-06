@@ -39,7 +39,7 @@ extern "C" {
 #include "detail.h"
 
 #ifdef ARAZU_DETAIL_WINDOWS
-    typedef char Arazu_i8;
+    typedef signed char Arazu_i8;
     typedef unsigned char Arazu_u8;
     
     typedef short Arazu_i16;
@@ -52,7 +52,7 @@ extern "C" {
     typedef unsigned long long Arazu_u64;
 
 #elif defined(ARAZU_DETAIL_LINUX) || defined(ARAZU_DETAIL_MACOS)
-    typedef char Arazu_i8;
+    typedef signed char Arazu_i8;
     typedef unsigned char Arazu_u8;
     
     typedef short Arazu_i16;

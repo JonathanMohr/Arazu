@@ -107,20 +107,20 @@ extern "C" {
     #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
         _Pragma("GCC diagnostic push") \
         _Pragma("GCC diagnostic ignored \"-Wc2y-extensions\"") \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, name), __COUNTER__) \
+        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__) \
         _Pragma("GCC diagnostic pop")
 #elif defined(ARAZU_DETAIL_CLANG)
     #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
         _Pragma("clang diagnostic push") \
         _Pragma("clang diagnostic ignored \"-Wc2y-extensions\"") \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, name), __COUNTER__) \
+        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__) \
         _Pragma("clang diagnostic pop")
 #elif defined(ARAZU_DETAIL_MSVC)
     #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, name), __COUNTER__)
+        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__)
 #else
     #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, name), ARAZU_INTERNAL_CONCAT(__FILE__, __LINE__))
+        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), ARAZU_INTERNAL_CONCAT(__FILE__, __LINE__))
 #endif
 
 
