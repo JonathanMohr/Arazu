@@ -5,7 +5,7 @@
 
 struct Arazu_Context
 {
-    char a;
+    Arazu_Allocator allocator;
 };
 
 #endif
