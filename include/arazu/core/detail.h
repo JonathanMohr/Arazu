@@ -144,6 +144,27 @@ extern "C" {
 #endif
 
 
+#if defined(ARAZU_DETAIL_GCC) || defined (ARAZU_DETAIL_CLANG)
+    #define ARAZU_DETAIL_WEAK_FUNCTION(ret, name, params, body) \
+        __attribute__((weak)) ret name params body
+
+#elif defined(ARAZU_DETAIL_MSVC)
+
+    #if defined(ARAZU_DETAIL_X86) || defined(ARAZU_DETAIL_ARM32)
+        #define ARAZU_DETAIL_WEAK_FUNCTION(ret, name, params, body) \
+            __pragma(comment(linker, "/alternatename:_" #name "=_" #name "_default")) \
+            ret name##_default params body
+
+    #elif defined(ARAZU_DETAIL_X86_64) || defined(ARAZU_DETAIL_ARM64)
+        #define ARAZU_DETAIL_WEAK_FUNCTION(ret, name, params, body) \
+            __pragma(comment(linker, "/alternatename:" #name "=" #name "_default")) \
+            ret name##_default params body
+
+    #endif
+
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif

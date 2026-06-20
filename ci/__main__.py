@@ -150,12 +150,24 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     return dynamic_libs, static_libs
 
 
-def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
+def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
     objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, True)
     
+    libs: list[Path] = []
+
+    for library in libraries:
+        dynamic_libraries, static_libraries = library
+
+        if mode.linking == LINKING.DYNAMIC:
+            for dynamic_library in dynamic_libraries:
+                dylib, implib, debug_info = dynamic_library
+                libs.append(dylib)
+        else:
+            for static_library in static_libraries:
+                libs.append(static_library)
+
     try:
-        libraries = []
-        executable, executable_debug_info = toolchain.Link_Executable(mode, objects, libraries, name, build_dir)
+        executable, executable_debug_info = toolchain.Link_Executable(mode, objects, libs, name, build_dir)
 
     except Exception as e:
         logger.error(f"Linking executable {name} failed: {e}")
@@ -359,7 +371,7 @@ def main() -> bool:
                 hidden=False, # set
                 optimization=OPTIMIZATION.SPEED,
                 portability=PORTABILITY.PORTABLE,
-                linking=LINKING.DYNAMIC,
+                linking=LINKING.STATIC,
                 assertions=False, # set
                 sanitizers=False, # set
                 debuginfo=False, # set
@@ -414,7 +426,7 @@ def main() -> bool:
 
             testBuildMode = copy.copy(buildMode)
 
-            testExecutable = Build_Executable(logger, testToolchain, testBuildMode, tools_dir / "test", build_dir / "tools" / "test", "test")
+            testExecutable = Build_Executable(logger, testToolchain, testBuildMode, [coreLibrary], tools_dir / "test", build_dir / "tools" / "test", "test")
 
             Stage(logger, dist_dir, include_dir, [coreLibrary], [testExecutable])
 
