@@ -427,6 +427,7 @@ def main() -> bool:
             testBuildMode = copy.copy(buildMode)
 
             testExecutable = Build_Executable(logger, testToolchain, testBuildMode, [coreLibrary], tools_dir / "test", build_dir / "tools" / "test", "test")
+            
 
             Stage(logger, dist_dir, include_dir, [coreLibrary], [testExecutable])
 
