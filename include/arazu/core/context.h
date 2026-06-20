@@ -12,9 +12,19 @@ typedef void* Arazu_String;
 
 typedef struct Arazu_StringPool
 {
-    Arazu_String (*getString)(const char* str);
+    /** Interns a null-terminated string and returns its handle, or ARAZU_NULL on failure */
+    Arazu_String (*intern)(struct Arazu_StringPool* pool, const char* str);
 
-    // TODO: ...
+    /** Compares two interned strings, returns ARAZU_TRUE if equal */
+    Arazu_Bool (*compare)(struct Arazu_StringPool* pool, Arazu_String a, Arazu_String b);
+
+    /** Returns a temporarily valid const char* for the given handle, valid until the next intern call */
+    const char* (*toCString)(struct Arazu_StringPool* pool, Arazu_String str);
+
+    /** Destroys the pool and frees all interned strings */
+    void (*destroy)(struct Arazu_StringPool* pool);
+
+    void* userdata;
 
 } Arazu_StringPool;
 
@@ -39,7 +49,7 @@ typedef struct Arazu_Allocator
 typedef struct Arazu_Context Arazu_Context;
 
 /** Creates context for Arazu functions, shallow copies arguments and returns ARAZU_NULL on failure */
-ARAZU_DETAIL_API Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator);
+ARAZU_DETAIL_API Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator, const Arazu_StringPool* stringPool);
 
 /** Destroys and frees a created Arazu context */
 ARAZU_DETAIL_API void Arazu_Context_Destroy(Arazu_Context* ctx);

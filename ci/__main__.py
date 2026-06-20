@@ -150,6 +150,20 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     return dynamic_libs, static_libs
 
 
+def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
+    objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, True)
+    
+    try:
+        libraries = []
+        executable, executable_debug_info = toolchain.Link_Executable(mode, objects, libraries, name, build_dir)
+
+    except Exception as e:
+        logger.error(f"Linking executable {name} failed: {e}")
+        raise e
+    
+    return executable, executable_debug_info
+
+
 def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
     if src.exists():
         if dst.exists():
@@ -164,7 +178,7 @@ def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
         logger.warning(f"{src} does not exist")
 
 
-def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]):
+def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], executables: list[tuple[Path, Path | None]]):
     license_path = Path("LICENSE")
     
     if dist_dir.exists(): shutil.rmtree(str(dist_dir))
@@ -173,8 +187,11 @@ def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries:
 
     include_dir = dist_dir / "include"
     lib_dir = dist_dir / "lib"
+    bin_dir = dist_dir / "bin"
 
+    include_dir.mkdir(parents=True, exist_ok=True)
     lib_dir.mkdir(parents=True, exist_ok=True)
+    bin_dir.mkdir(parents=True, exist_ok=True)
 
     # License
     Copy_Path(logger, license_path, license)
@@ -203,6 +220,17 @@ def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries:
         for static_library in static_libraries:
             dst_static_library = lib_dir / static_library.name
             Copy_Path(logger, static_library, dst_static_library)
+
+    # Executables
+    for exe in executables:
+        executable, executable_debug_info = exe
+
+        dst_exe = bin_dir / executable.name
+        Copy_Path(logger, executable, dst_exe)
+
+        if executable_debug_info is not None:
+            dst_debug_info = bin_dir / executable_debug_info.name
+            Copy_Path(logger, executable_debug_info, dst_debug_info)
 
 
 def main() -> bool:
@@ -284,6 +312,7 @@ def main() -> bool:
 
     include_dir = Path("include")
     lib_dir = Path("libs")
+    tools_dir = Path("tools")
 
     os_dir = Path("os")
     windows_dir = os_dir / "windows"
@@ -334,7 +363,7 @@ def main() -> bool:
                 assertions=False, # set
                 sanitizers=False, # set
                 debuginfo=False, # set
-                host=HOST.FREESTANDING, # set
+                host=HOST.HOSTED, # set
                 sysroot=None,
                 project_root=str(include_dir.parent.resolve())
             )
@@ -364,17 +393,30 @@ def main() -> bool:
             log_dir = specific_log_dir / target_os_str / target_arch_str / optimization_str / portability_str / linking_str
 
             if buildMode.target_os == OS.Windows:
-                windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "windows", "windows_dll", True)
+                windows_dll = Build_Static_Library(logger, toolchain, buildMode, windows_dir / "dll", build_dir / "os" / "windows", "windows_dll", True)
                 dll_libraries.append(windows_dll)
 
             toolchain.Add_Define("ARAZU_BUILD")
             toolchain.Add_Include_Directory(include_dir)
 
+
             coreToolchain = copy.copy(toolchain)
             coreToolchain.Add_Include_Directory(lib_dir / "core")
-            coreLibrary = Build_Dist_Library(logger, coreToolchain, buildMode, dll_libraries, lib_dir / "core", build_dir / "core", "arazu")
 
-            Stage(logger, dist_dir, include_dir, [coreLibrary])
+            coreBuildMode = copy.copy(buildMode)
+            coreBuildMode.host == HOST.FREESTANDING
+            
+            coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
+
+
+            testToolchain = copy.copy(toolchain)
+            testToolchain.Add_Include_Directory(tools_dir / "test")
+
+            testBuildMode = copy.copy(buildMode)
+
+            testExecutable = Build_Executable(logger, testToolchain, testBuildMode, tools_dir / "test", build_dir / "tools" / "test", "test")
+
+            Stage(logger, dist_dir, include_dir, [coreLibrary], [testExecutable])
 
         else:
             pass

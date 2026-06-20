@@ -1,6 +1,6 @@
 #include "context.h"
 
-Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator)
+Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator, const Arazu_StringPool* stringPool)
 {
     Arazu_Context* context = allocator->allocate(allocator, sizeof(Arazu_Context));
     if (context == ARAZU_NULL)
@@ -9,6 +9,7 @@ Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator)
     }
 
     context->allocator = *allocator;
+    context->stringPool = *stringPool;
     
     return context;
 }

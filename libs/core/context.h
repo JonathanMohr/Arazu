@@ -6,6 +6,7 @@
 struct Arazu_Context
 {
     Arazu_Allocator allocator;
+    Arazu_StringPool stringPool;
 };
 
 #endif

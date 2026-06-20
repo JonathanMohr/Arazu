@@ -70,7 +70,7 @@ class Toolchain:
     def Archive_Objects(self, mode: BuildMode, objects: list[Path], name: str, out_dir: Path) -> Path:
         return self._Archive_Objects(self, mode, objects, name, out_dir)
     
-    def Link_Executable(self, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> Path:
+    def Link_Executable(self, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path) -> tuple[Path, Path | None]:
         return self._Link_Executable(self, mode, objects, libraries, name, out_dir)
     
     def Link_DynamicLibrary(self, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None, Path | None]:
