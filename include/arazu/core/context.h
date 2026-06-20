@@ -8,6 +8,16 @@ extern "C" {
 #include "detail.h"
 #include "types.h"
 
+typedef void* Arazu_String;
+
+typedef struct Arazu_StringPool
+{
+    Arazu_String (*getString)(const char* str);
+
+    // TODO: ...
+
+} Arazu_StringPool;
+
 typedef struct Arazu_Allocator
 {
     /** Allocates memory of a size in bytes aligned to ARAZU_FUNDAMENTAL_ALIGNMENT and returns its pointer or ARAZU_NULL on failure */
