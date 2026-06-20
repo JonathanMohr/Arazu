@@ -5,30 +5,33 @@
     Arazu_* and ARAZU_* are both fully reserved for this library
 
     Types (types are stable on each platform, no matter the Compiler or Compiler-Version):
-        Arazu_i8                    Signed 8-bit integer that can store values ranging from -127 to 127
-        Arazu_u8                    Unsigned 8-bit integer that can only store values ranging from 0 to 255 and wraps around
-        Arazu_i16                   Signed 16-bit integer that can store values ranging from -32767 to 32767
-        Arazu_u16                   Unsigned 16-bit integer that can only store values ranging from 0 to 65535 and wraps around
-        Arazu_i32                   Signed 32-bit integer that can store values ranging from -2147483647 to 2147483647
-        Arazu_u32                   Unsigned 32-bit integer that can only store values ranging from 0 to 4294967295 and wraps around
-        Arazu_i64                   Signed 64-bit integer that can store values ranging from -9223372036854775807 to 9223372036854775807
-        Arazu_u64                   Unsigned 64-bit integer that can only store values ranging from 0 to 18446744073709551615 and wraps around
+        Arazu_S_size_t                  size_t
 
-        Arazu_Value                 Same as Arazu_i64
-        Arazu_uValue                Same as Arazu_u64
+        Arazu_i8                        Signed 8-bit integer that can store values ranging from -127 to 127
+        Arazu_u8                        Unsigned 8-bit integer that can only store values ranging from 0 to 255 and wraps around
+        Arazu_i16                       Signed 16-bit integer that can store values ranging from -32767 to 32767
+        Arazu_u16                       Unsigned 16-bit integer that can only store values ranging from 0 to 65535 and wraps around
+        Arazu_i32                       Signed 32-bit integer that can store values ranging from -2147483647 to 2147483647
+        Arazu_u32                       Unsigned 32-bit integer that can only store values ranging from 0 to 4294967295 and wraps around
+        Arazu_i64                       Signed 64-bit integer that can store values ranging from -9223372036854775807 to 9223372036854775807
+        Arazu_u64                       Unsigned 64-bit integer that can only store values ranging from 0 to 18446744073709551615 and wraps around
+
+        Arazu_Value                     Same as Arazu_i64
+        Arazu_uValue                    Same as Arazu_u64
+
+        Arazu_PointerSize               Maximum size a pointer can have as unsigned integer
+        Arazu_Size                      Unsigned integer which can at least store every Arazu_PointerSize and size_t
 
 
-        Arazu_PointerSize           Maximum size a pointer can have as unsigned integer
-        Arazu_Size                  Unsigned integer which can at least store every Arazu_PointerSize and size_t
-
-
-        Arazu_Bool                  Type that can store at ARAZU_FALSE and ARAZU_TRUE
+        Arazu_Bool                      Type that can store at ARAZU_FALSE and ARAZU_TRUE
 
     Definitions: 
-        ARAZU_FALSE                 Value that represents false for Arazu_Bool
-        ARAZU_TRUE                  Value that represents true for Arazu_Bool
+        ARAZU_FALSE                     Value that represents false for Arazu_Bool
+        ARAZU_TRUE                      Value that represents true for Arazu_Bool
 
-        ARAZU_NULL                  Invalid pointer address
+        ARAZU_NULL                      Invalid pointer address
+
+        ARAZU_FUNDAMENTAL_ALIGNMENT     Maximum alignment of fundamental types
 
 */
 
@@ -37,6 +40,16 @@ extern "C" {
 #endif
 
 #include "detail.h"
+
+#if defined(ARAZU_DETAIL_X86)
+    #define ARAZU_FUNDAMENTAL_ALIGNMENT 16
+#elif defined(ARAZU_DETAIL_X86_64)
+    #define ARAZU_FUNDAMENTAL_ALIGNMENT 16
+#elif defined(ARAZU_DETAIL_ARM32)
+    #define ARAZU_FUNDAMENTAL_ALIGNMENT 8
+#elif defined(ARAZU_DETAIL_ARM64)
+    #define ARAZU_FUNDAMENTAL_ALIGNMENT 16
+#endif
 
 #ifdef ARAZU_DETAIL_WINDOWS
     typedef signed char Arazu_i8;
@@ -89,6 +102,9 @@ typedef Arazu_u64 Arazu_uValue;
         typedef Arazu_u64 Arazu_Size;
     #endif
 #endif
+
+// TODO: Could be different for some targets
+typedef Arazu_PointerSize Arazu_S_size_t;
 
 
 typedef Arazu_u8 Arazu_Bool;
