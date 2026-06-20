@@ -5,7 +5,7 @@
     Arazu_* and ARAZU_* are both fully reserved for this library
 
     Types (types are stable on each platform, no matter the Compiler or Compiler-Version):
-        Arazu_S_size_t                  size_t
+        Arazu_Support_size_t            size_t
 
         Arazu_i8                        Signed 8-bit integer that can store values ranging from -127 to 127
         Arazu_u8                        Unsigned 8-bit integer that can only store values ranging from 0 to 255 and wraps around
@@ -104,7 +104,7 @@ typedef Arazu_u64 Arazu_uValue;
 #endif
 
 // TODO: Could be different for some targets
-typedef Arazu_PointerSize Arazu_S_size_t;
+typedef Arazu_PointerSize Arazu_Support_size_t;
 
 
 typedef Arazu_u8 Arazu_Bool;
