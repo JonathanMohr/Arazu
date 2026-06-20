@@ -144,15 +144,6 @@ extern "C" {
 #endif
 
 
-#if defined(ARAZU_DETAIL_GCC) | defined(ARAZU_DETAIL_CLANG)
-    #define ARAZU_INTERNAL_ALIGNED_TO_NUMBER(n)         __attribute__((assume_aligned(64)))
-    #define ARAZU_INTERNAL_ALIGNED_TO_ARGUMENT(argpos)  __attribute__((alloc_align(2)))
-#elif defined(ARAZU_DETAIL_MSVC)
-    #define ARAZU_INTERNAL_ALIGNED_TO_NUMBER(n)
-    #define ARAZU_INTERNAL_ALIGNED_TO_ARGUMENT(argpos)
-#endif
-
-
 #ifdef __cplusplus
 }
 #endif
