@@ -421,15 +421,15 @@ def main() -> bool:
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
 
 
-            testToolchain = copy.copy(toolchain)
-            testToolchain.Add_Include_Directory(tools_dir / "test")
+            arasmToolchain = copy.copy(toolchain)
+            arasmToolchain.Add_Include_Directory(tools_dir / "test")
 
-            testBuildMode = copy.copy(buildMode)
+            arasmBuildMode = copy.copy(buildMode)
 
-            testExecutable = Build_Executable(logger, testToolchain, testBuildMode, [coreLibrary], tools_dir / "test", build_dir / "tools" / "test", "test")
+            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [coreLibrary], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
 
-            Stage(logger, dist_dir, include_dir, [coreLibrary], [testExecutable])
+            Stage(logger, dist_dir, include_dir, [coreLibrary], [arasmExecutable])
 
         else:
             pass
