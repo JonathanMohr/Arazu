@@ -104,9 +104,10 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
     # Linking
     match mode.linking:
         case LINKING.STATIC:
-            flags.extend([
-                "-static"
-            ])
+            if mode.target_os != OS.macOS:
+                flags.extend([
+                    "-static"
+                ])
 
         case LINKING.DYNAMIC:
             flags.extend([
@@ -260,9 +261,10 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
     # Linking
     match mode.linking:
         case LINKING.STATIC:
-            flags.extend([
-                "-static"
-            ])
+            if mode.target_os != OS.macOS:
+                flags.extend([
+                    "-static"
+                ])
 
         case LINKING.DYNAMIC:
             flags.extend([

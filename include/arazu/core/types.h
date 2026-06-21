@@ -25,7 +25,33 @@
 
         Arazu_Bool                      Type that can store at ARAZU_FALSE and ARAZU_TRUE
 
-    Definitions: 
+    Definitions:
+
+        ARAZU_FORMAT_I8                 Format string for printf to print an 8-bit signed decimal integer
+        ARAZU_FORMAT_U8                 Format string for printf to print an 8-bit unsigned decimal integer
+        ARAZU_FORMAT_O8                 Format string for printf to print an 8-bit unsigned octal integer
+        ARAZU_FORMAT_X8                 Format string for printf to print an 8-bit unsigned hexadecimal integer
+        ARAZU_FORMAT_I16                Format string for printf to print an 16-bit signed decimal integer
+        ARAZU_FORMAT_U16                Format string for printf to print an 16-bit unsigned decimal integer
+        ARAZU_FORMAT_O16                Format string for printf to print an 16-bit unsigned octal integer
+        ARAZU_FORMAT_X16                Format string for printf to print an 16-bit unsigned hexadecimal integer
+        ARAZU_FORMAT_I32                Format string for printf to print an 32-bit signed decimal integer
+        ARAZU_FORMAT_U32                Format string for printf to print an 32-bit unsigned decimal integer
+        ARAZU_FORMAT_O32                Format string for printf to print an 32-bit unsigned octal integer
+        ARAZU_FORMAT_X32                Format string for printf to print an 32-bit unsigned hexadecimal integer
+        ARAZU_FORMAT_I64                Format string for printf to print an 64-bit signed decimal integer
+        ARAZU_FORMAT_U64                Format string for printf to print an 64-bit unsigned decimal integer
+        ARAZU_FORMAT_O64                Format string for printf to print an 64-bit unsigned octal integer
+        ARAZU_FORMAT_X64                Format string for printf to print an 64-bit unsigned hexadecimal integer
+
+        ARAZU_FORMAT_IVALUE             Format string for printf to print an Arazu_Value/Arazu_uValue as signed decimal integer
+        ARAZU_FORMAT_UVALUE             Format string for printf to print an Arazu_Value/Arazu_uValue as unsigned decimal integer
+        ARAZU_FORMAT_OVALUE             Format string for printf to print an Arazu_Value/Arazu_uValue as unsigned octal integer
+        ARAZU_FORMAT_XVALUE             Format string for printf to print an Arazu_Value/Arazu_uValue as unsigned hexadecimal integer
+
+        ARAZU_FORMAT_POINTER            Format string for printf to print an pointer
+        ARAZU_FORMAT_SIZE               Format string for printf to print Arazu_Size
+
         ARAZU_FALSE                     Value that represents false for Arazu_Bool
         ARAZU_TRUE                      Value that represents true for Arazu_Bool
 
@@ -42,7 +68,7 @@ extern "C" {
 #include "detail.h"
 
 #if defined(ARAZU_DETAIL_X86)
-    #define ARAZU_FUNDAMENTAL_ALIGNMENT 16
+    #define ARAZU_FUNDAMENTAL_ALIGNMENT 8
 #elif defined(ARAZU_DETAIL_X86_64)
     #define ARAZU_FUNDAMENTAL_ALIGNMENT 16
 #elif defined(ARAZU_DETAIL_ARM32)
@@ -54,32 +80,68 @@ extern "C" {
 #ifdef ARAZU_DETAIL_WINDOWS
     typedef signed char Arazu_i8;
     typedef unsigned char Arazu_u8;
+    #define ARAZU_FORMAT_I8  "hhd"
+    #define ARAZU_FORMAT_U8  "hhu"
+    #define ARAZU_FORMAT_O8  "hho"
+    #define ARAZU_FORMAT_X8  "hhX"
     
     typedef short Arazu_i16;
     typedef unsigned short Arazu_u16;
+    #define ARAZU_FORMAT_I16 "hd"
+    #define ARAZU_FORMAT_U16 "hu"
+    #define ARAZU_FORMAT_O16 "ho"
+    #define ARAZU_FORMAT_X16 "hX"
 
     typedef int Arazu_i32;
     typedef unsigned int Arazu_u32;
+    #define ARAZU_FORMAT_I32 "d"
+    #define ARAZU_FORMAT_U32 "u"
+    #define ARAZU_FORMAT_O32 "o"
+    #define ARAZU_FORMAT_X32 "X"
 
     typedef long long Arazu_i64;
     typedef unsigned long long Arazu_u64;
+    #define ARAZU_FORMAT_I64 "lld"
+    #define ARAZU_FORMAT_U64 "llu"
+    #define ARAZU_FORMAT_O64 "llo"
+    #define ARAZU_FORMAT_X64 "llX"
 
 #elif defined(ARAZU_DETAIL_LINUX) || defined(ARAZU_DETAIL_MACOS)
     typedef signed char Arazu_i8;
     typedef unsigned char Arazu_u8;
+    #define ARAZU_FORMAT_I8 "hhd"
+    #define ARAZU_FORMAT_U8 "hhu"
+    #define ARAZU_FORMAT_O8 "hho"
+    #define ARAZU_FORMAT_X8 "hhX"
     
     typedef short Arazu_i16;
     typedef unsigned short Arazu_u16;
+    #define ARAZU_FORMAT_I16 "hd"
+    #define ARAZU_FORMAT_U16 "hu"
+    #define ARAZU_FORMAT_O16 "ho"
+    #define ARAZU_FORMAT_X16 "hX"
 
     typedef int Arazu_i32;
     typedef unsigned int Arazu_u32;
+    #define ARAZU_FORMAT_I32 "d"
+    #define ARAZU_FORMAT_U32 "u"
+    #define ARAZU_FORMAT_O32 "o"
+    #define ARAZU_FORMAT_X32 "X"
 
     #if defined(ARAZU_DETAIL_X86) || defined(ARAZU_DETAIL_ARM32)
         typedef long long Arazu_i64;
         typedef unsigned long long Arazu_u64;
+        #define ARAZU_FORMAT_I64 "lld"
+        #define ARAZU_FORMAT_U64 "llu"
+        #define ARAZU_FORMAT_O64 "llo"
+        #define ARAZU_FORMAT_X64 "llX"
     #else
         typedef long Arazu_i64;
         typedef unsigned long Arazu_u64;
+        #define ARAZU_FORMAT_I64 "ld"
+        #define ARAZU_FORMAT_U64 "lu"
+        #define ARAZU_FORMAT_O64 "lo"
+        #define ARAZU_FORMAT_X64 "lX"
     #endif
 
 #endif
@@ -87,19 +149,27 @@ extern "C" {
 
 typedef Arazu_i64 Arazu_Value;
 typedef Arazu_u64 Arazu_uValue;
+#define ARAZU_FORMAT_IVALUE ARAZU_FORMAT_I64
+#define ARAZU_FORMAT_UVALUE ARAZU_FORMAT_U64
+#define ARAZU_FORMAT_OVALUE ARAZU_FORMAT_O64
+#define ARAZU_FORMAT_XVALUE ARAZU_FORMAT_X64
 
 
 #if defined(ARAZU_DETAIL_X86) || defined(ARAZU_DETAIL_ARM32)
     typedef Arazu_u32 Arazu_PointerSize;
+    #define ARAZU_FORMAT_POINTER ARAZU_FORMAT_X32
     
     #if defined(ARAZU_DETAIL_WINDOWS) || defined(ARAZU_DETAIL_LINUX) || defined(ARAZU_DETAIL_MACOS)
         typedef Arazu_u32 Arazu_Size;
+        #define ARAZU_FORMAT_SIZE ARAZU_FORMAT_U32
     #endif
 #else
     typedef Arazu_u64 Arazu_PointerSize;
+    #define ARAZU_FORMAT_POINTER ARAZU_FORMAT_X64
 
     #if defined(ARAZU_DETAIL_WINDOWS) || defined(ARAZU_DETAIL_LINUX) || defined(ARAZU_DETAIL_MACOS)
         typedef Arazu_u64 Arazu_Size;
+        #define ARAZU_FORMAT_SIZE ARAZU_FORMAT_U64
     #endif
 #endif
 

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <inttypes.h>
 #include <stdlib.h>
 
 #include <arazu/core/context.h>
@@ -19,7 +18,7 @@ static void Free(const Arazu_Allocator* allocator, void* ptr)
 int main(void)
 {
     Arazu_u64 test = 2;
-    printf("%" PRIu64, test);
+    printf("%" ARAZU_FORMAT_U64 "\n", test);
 
     Arazu_Allocator allocator = {0};
     allocator.allocate = Allocate;
