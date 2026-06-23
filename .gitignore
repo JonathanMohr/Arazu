@@ -7,6 +7,8 @@ dist/
 
 logs/
 
+sysroots/
+
 __pycache__/
 *.pyc
 *.pyo
