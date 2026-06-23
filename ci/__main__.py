@@ -375,7 +375,7 @@ def main() -> bool:
                 assertions=False, # set
                 sanitizers=False, # set
                 debuginfo=False, # set
-                host=HOST.HOSTED, # set
+                host=HOST.FREESTANDING, # set
                 sysroot=None,
                 project_root=str(include_dir.parent.resolve())
             )
@@ -416,7 +416,6 @@ def main() -> bool:
             coreToolchain.Add_Include_Directory(lib_dir / "core")
 
             coreBuildMode = copy.copy(buildMode)
-            coreBuildMode.host == HOST.FREESTANDING
             
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
 
@@ -425,6 +424,7 @@ def main() -> bool:
             arasmToolchain.Add_Include_Directory(tools_dir / "test")
 
             arasmBuildMode = copy.copy(buildMode)
+            arasmBuildMode.host == HOST.HOSTED
 
             arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [coreLibrary], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
