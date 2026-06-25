@@ -345,6 +345,8 @@ def main() -> bool:
 
     buildContext = BuildContext(logger, buildCache, compileCommands)
     toolchain = Get_LLVM_Toolchain(buildContext)
+    toolchain.Set_STDC("c99")
+    toolchain.Set_STDCPP("c++98")
 
     dll_libraries: list[Path] = []
 
