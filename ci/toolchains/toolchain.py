@@ -1,18 +1,18 @@
 from ci.defs import BuildContext, BuildMode
 
-from typing import Callable
+from typing import Callable, TypeAlias
 from pathlib import Path
 import shutil
 
 class Toolchain:
     # self, mode, src, src_rel, out_dir, doCompileCommands -> object
-    type Compile_Function = Callable[["Toolchain", BuildMode, Path, Path, Path, bool], Path]
+    Compile_Function: TypeAlias = Callable[["Toolchain", BuildMode, Path, Path, Path, bool], Path]
     # self, mode, objects, name, out_dir -> lib
-    type Archive_Function = Callable[["Toolchain", BuildMode, list[Path], str, Path, bool], Path]
+    Archive_Function: TypeAlias = Callable[["Toolchain", BuildMode, list[Path], str, Path, bool], Path]
     # self, mode, objects, libraries, name, out_dir -> executable, debug_info | None
-    type Link_Executable_Function = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path], tuple[Path, Path | None]]
+    Link_Executable_Function: TypeAlias = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path], tuple[Path, Path | None]]
     # self, mode, objects, libraries, name, out_dir, plugin -> dylib, implib | None, debug_info | None
-    type Link_DynamicLibrary_Function = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path, bool], tuple[Path, Path | None, Path | None]]
+    Link_DynamicLibrary_Function: TypeAlias = Callable[["Toolchain", BuildMode, list[Path], list[Path], str, Path, bool], tuple[Path, Path | None, Path | None]]
 
     _Compile_C_Source: Compile_Function
     _Compile_CPP_Source: Compile_Function

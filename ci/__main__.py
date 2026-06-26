@@ -271,6 +271,13 @@ def main() -> bool:
         default=None,
         help="Set target arch"
     )
+    argparser.add_argument(
+        "--sysroot",
+        dest="sysroot",
+        type=str,
+        default=None,
+        help="Set sysroot path"
+    )
 
     args = argparser.parse_args()
 
@@ -349,6 +356,16 @@ def main() -> bool:
     toolchain.Set_STDCPP("c++98")
 
     dll_libraries: list[Path] = []
+    
+    sysroot_path: str | None = args.sysroot
+    if sysroot_path:
+        sysroot_path = str(Path(sysroot_path).resolve())
+
+    match target_os:
+        case OS.Windows: linking = LINKING.DYNAMIC
+        case OS.Linux: linking = LINKING.DYNAMIC
+        case OS.macOS: linking = LINKING.DYNAMIC
+        case _: linking = LINKING.STATIC
 
     try:
         if dist_build:
@@ -373,12 +390,12 @@ def main() -> bool:
                 hidden=False, # set
                 optimization=OPTIMIZATION.SPEED,
                 portability=PORTABILITY.PORTABLE,
-                linking=LINKING.STATIC,
+                linking=linking,
                 assertions=False, # set
                 sanitizers=False, # set
                 debuginfo=False, # set
                 host=HOST.FREESTANDING, # set
-                sysroot=None,
+                sysroot=sysroot_path,
                 project_root=str(include_dir.parent.resolve())
             )
 
@@ -426,7 +443,7 @@ def main() -> bool:
             arasmToolchain.Add_Include_Directory(tools_dir / "test")
 
             arasmBuildMode = copy.copy(buildMode)
-            arasmBuildMode.host == HOST.HOSTED
+            arasmBuildMode.host = HOST.HOSTED
 
             arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [coreLibrary], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
