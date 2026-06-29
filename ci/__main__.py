@@ -194,7 +194,7 @@ def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
         logger.warning(f"{src} does not exist")
 
 
-def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], executables: list[tuple[Path, Path | None]]):
+def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]) -> tuple[Path, Path]:
     license_path = Path("LICENSE")
     
     if dist_dir.exists(): shutil.rmtree(str(dist_dir))
@@ -203,11 +203,9 @@ def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries:
 
     include_dir = dist_dir / "include"
     lib_dir = dist_dir / "lib"
-    bin_dir = dist_dir / "bin"
 
     include_dir.mkdir(parents=True, exist_ok=True)
     lib_dir.mkdir(parents=True, exist_ok=True)
-    bin_dir.mkdir(parents=True, exist_ok=True)
 
     # License
     Copy_Path(logger, license_path, license)
@@ -236,6 +234,15 @@ def Stage(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries:
         for static_library in static_libraries:
             dst_static_library = lib_dir / static_library.name
             Copy_Path(logger, static_library, dst_static_library)
+
+    return (include_dir, lib_dir)
+
+def StageExecutables(logger: logging.Logger, dist_dir: Path, executables: list[tuple[Path, Path | None]]):
+    if dist_dir.exists(): shutil.rmtree(str(dist_dir))
+
+    bin_dir = dist_dir / "bin"
+
+    bin_dir.mkdir(parents=True, exist_ok=True)
 
     # Executables
     for exe in executables:
@@ -441,19 +448,22 @@ def main() -> bool:
             coreBuildMode = copy.copy(buildMode)
             
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
-            coreLibraryDynamic, coreLibraryStatic = coreLibrary
+            
+            dist_include_dir, dist_lib_dir = StageLibraries(logger, dist_dir, include_dir, [coreLibrary])
 
 
             arasmToolchain = copy.copy(toolchain)
-            arasmToolchain.Add_Include_Directory(tools_dir / "test")
+            arasmToolchain.Add_Include_Directory(tools_dir / "arasm")
+            arasmToolchain.Add_Library_Directory(dist_lib_dir)
+            arasmToolchain.Add_Library("arazus")
 
             arasmBuildMode = copy.copy(buildMode)
             arasmBuildMode.host = HOST.HOSTED
 
-            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [*coreLibraryStatic], [], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
+            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [], [], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
 
-            Stage(logger, dist_dir, include_dir, [coreLibrary], [arasmExecutable])
+            StageExecutables(logger, dist_dir, [arasmExecutable])
 
         else:
             pass

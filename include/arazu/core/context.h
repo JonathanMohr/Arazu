@@ -54,6 +54,8 @@ ARAZU_DETAIL_API Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allo
 /** Destroys and frees a created Arazu context */
 ARAZU_DETAIL_API void Arazu_Context_Destroy(Arazu_Context* ctx);
 
+ARAZU_DETAIL_API const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx);
+
 #ifdef __cplusplus
 }
 #endif

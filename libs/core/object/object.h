@@ -1,23 +1,18 @@
 #ifndef ARAZU_LCORE_OBJECT_OBJECT_H
 #define ARAZU_LCORE_OBJECT_OBJECT_H
 
-#include "arazu/core/context.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <arazu/core/object/object.h>
 
-typedef Arazu_u16 Arazu_Object_Relocation_Type;
-#define ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE    ((Arazu_Object_Relocation_Type)0)
-#define ARAZU_OBJECT_RELOCATION_TYPE_PC_RELATIVE ((Arazu_Object_Relocation_Type)1)
-
 struct Arazu_Object_Relocation
 {
-    Arazu_u64 offsetInSection;
-    Arazu_i64 addend;
+    Arazu_Value addend;
+    Arazu_uValue offsetInSection;
 
-    Arazu_String* symbol;
+    Arazu_String symbol;
 
     Arazu_u16 size;
     Arazu_Object_Relocation_Type type;
@@ -29,7 +24,7 @@ struct Arazu_Object_Relocation
 
 struct Arazu_Object_Symbol
 {
-    Arazu_u64 value;
+    Arazu_uValue value;
 
     Arazu_u64 line; // 0-based
     Arazu_u64 column; // 0-based
@@ -44,40 +39,44 @@ struct Arazu_Object_Symbol
     Arazu_Bool isGlobal;
 };
 
-typedef Arazu_u8 Arazu_Object_Section_Flags;
-#define ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED  ((Arazu_Object_Section_Flags)1 << 0)
-#define ARAZU_OBJECT_SECTION_FLAGS_EXECUTABLE ((Arazu_Object_Section_Flags)1 << 1)
-#define ARAZU_OBJECT_SECTION_FLAGS_WRITABLE   ((Arazu_Object_Section_Flags)1 << 2)
-
-typedef Arazu_u8 Arazu_Object_Section_Type;
-#define ARAZU_OBJECT_SECTION_TYPE_INITIALIZED   ((Arazu_Object_Section_Type)0)
-#define ARAZU_OBJECT_SECTION_TYPE_UNINITIALIZED ((Arazu_Object_Section_Type)1)
-
 struct Arazu_Object_Section
 {
-    Arazu_u64 size;
-    Arazu_u64 align;
+    Arazu_uValue relocationCount;
+    Arazu_uValue symbolCount;
 
-    struct Arazu_Object_Relocation* relocations;
-    struct Arazu_Object_Symbol* symbols; // symbols in section
-
-    Arazu_u8* buffer;
-    Arazu_String name;
+    Arazu_uValue align;
 
     Arazu_Object_Section_Flags flags;
+
+    Arazu_Size relocationCapacity;
+    Arazu_Size symbolCapacity;
+
+    Arazu_uValue size;
+
+    Arazu_Object_Relocation* relocations;
+    Arazu_Object_Symbol* symbols; // symbols in section
+
+    Arazu_u8* buffer;
+
+    Arazu_String name;
+
     Arazu_Object_Section_Type type;
 };
 
 struct Arazu_Object
 {
-    struct Arazu_Object_Section* sections;
-    struct Arazu_Object_Symbol* symbols; // absolute and undefined symbols
+    Arazu_uValue sectionCount;
+    Arazu_uValue symbolCount;
+
+    Arazu_Size sectionCapacity;
+    Arazu_Size symbolCapacity;
+
+    Arazu_Object_Section* sections;
+    Arazu_Object_Symbol* symbols; // absolute and undefined symbols
 
     Arazu_String architecture; // just alphanumerical (all lowercase) + '_'
-    Arazu_String bitMode; // just alphanumerical (all lowercase) + '_'
+    Arazu_u16 bitMode;
 };
-
-
 
 #ifdef __cplusplus
 }
