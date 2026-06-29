@@ -150,10 +150,13 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     return dynamic_libs, static_libs
 
 
-def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
+def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, static_libs: list[Path], libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
     objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, True)
     
     libs: list[Path] = []
+
+    for static_lib in static_libs:
+        libs.append(static_lib)
 
     for library in libraries:
         dynamic_libraries, static_libraries = library
@@ -161,7 +164,8 @@ def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMo
         if mode.linking == LINKING.DYNAMIC:
             for dynamic_library in dynamic_libraries:
                 dylib, implib, debug_info = dynamic_library
-                libs.append(dylib)
+                if implib: libs.append(implib)
+                else: libs.append(dylib)
         else:
             for static_library in static_libraries:
                 libs.append(static_library)
@@ -437,6 +441,7 @@ def main() -> bool:
             coreBuildMode = copy.copy(buildMode)
             
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
+            coreLibraryDynamic, coreLibraryStatic = coreLibrary
 
 
             arasmToolchain = copy.copy(toolchain)
@@ -445,7 +450,7 @@ def main() -> bool:
             arasmBuildMode = copy.copy(buildMode)
             arasmBuildMode.host = HOST.HOSTED
 
-            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [coreLibrary], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
+            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [*coreLibraryStatic], [], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
 
             Stage(logger, dist_dir, include_dir, [coreLibrary], [arasmExecutable])
