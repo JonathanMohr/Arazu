@@ -10,13 +10,6 @@
 #endif
 #include <stdlib.h>
 
-static void* alloc__allocate(const Arazu_Allocator* a, Arazu_Size size)
-{
-    (void)a;
-    if (size == 0) return ARAZU_NULL;
-    return malloc((size_t)size);
-}
-
 static void* alloc__allocate_aligned(const Arazu_Allocator* a,
                                      Arazu_Size size,
                                      Arazu_Size alignment)
@@ -32,6 +25,11 @@ static void* alloc__allocate_aligned(const Arazu_Allocator* a,
         return ARAZU_NULL;
     return ptr;
 #endif
+}
+
+static void* alloc__allocate(const Arazu_Allocator* a, Arazu_Size size)
+{
+    return alloc__allocate_aligned(a, size, ARAZU_FUNDAMENTAL_ALIGNMENT);
 }
 
 static void alloc__free(const Arazu_Allocator* a, void* ptr)

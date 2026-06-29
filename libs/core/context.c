@@ -19,7 +19,7 @@ void Arazu_Context_Destroy(Arazu_Context* ctx)
     Arazu_Allocator copiedAllocator = ctx->allocator;
     copiedAllocator.free(&copiedAllocator, ctx);
 
-    // Think about destroying the stringPool
+    // TODO: Think about destroying the stringPool
 }
 
 ARAZU_DETAIL_API const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx)

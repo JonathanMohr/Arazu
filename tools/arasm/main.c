@@ -16,7 +16,6 @@ int main(int argc, const char* argv[])
         fprintf(stderr, "Failed to create string pool\n");
         return 1;
     }
-
     Arazu_Context* context = Arazu_Context_Create(&allocator, &stringPool);
     if (context == ARAZU_NULL)
     {
@@ -25,7 +24,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-
+    printf("Test\n");
 
     Arazu_Context_Destroy(context);
     stringPool.destroy(&stringPool);
