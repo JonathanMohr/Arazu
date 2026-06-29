@@ -196,9 +196,6 @@ def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
 
 def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]) -> tuple[Path, Path]:
     license_path = Path("LICENSE")
-    
-    if dist_dir.exists(): shutil.rmtree(str(dist_dir))
-
     license = dist_dir / "LICENSE"
 
     include_dir = dist_dir / "include"
@@ -238,8 +235,6 @@ def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, l
     return (include_dir, lib_dir)
 
 def StageExecutables(logger: logging.Logger, dist_dir: Path, executables: list[tuple[Path, Path | None]]):
-    if dist_dir.exists(): shutil.rmtree(str(dist_dir))
-
     bin_dir = dist_dir / "bin"
 
     bin_dir.mkdir(parents=True, exist_ok=True)
@@ -379,6 +374,8 @@ def main() -> bool:
         case _: linking = LINKING.STATIC
 
     try:
+        if dist_dir.exists(): shutil.rmtree(str(dist_dir))
+
         if dist_build:
             # werror = True
             # lto = True except static library
