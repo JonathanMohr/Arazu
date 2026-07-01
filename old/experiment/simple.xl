@@ -1,0 +1,10 @@
+namespace [no_mangle]
+{
+    import C <stdio.h>
+}
+
+int main()
+{
+    puts("Hello, World!");
+    return 0;
+}

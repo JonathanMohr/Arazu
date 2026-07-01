@@ -1,0 +1,63 @@
+int main()
+{
+    while (true)
+    { @scopeName
+        if (true)
+        {
+            break; // Will exit if-scope
+            // will never execute
+        }
+
+        // will execute
+
+        if (true)
+        {
+            break @scopeName;
+            // will never execute
+        }
+
+        // will never execute
+    }
+
+    int x = 4;
+
+    switch (x)
+    { @coolName
+        case 0:
+        {
+            break switch; // will exit switch
+        }
+
+        case 1:
+        {
+            break scope; // will only exit case-scope but not exit switch
+        }
+
+        case 2:
+        { @otherScope
+            break @otherScope; // will also only exit case-scope
+        }
+
+        case 3:
+        {
+            break @coolName; // wil also exit switch
+        }
+
+        case 4:
+            break; // will exit switch scope
+
+        case 5:
+            continue; // will also exit switch scope
+    }
+
+    //    break and continue behave the same on every scope other than while and for scopes
+
+    {
+        break;
+        // will never execute
+    }
+
+    // will always execute
+
+    return 0;
+}

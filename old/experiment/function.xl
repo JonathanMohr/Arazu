@@ -1,0 +1,24 @@
+int f() // no parameters
+{
+    return 2;
+}
+
+int [no_mangle] f2() // won't be mangled
+{
+    return 3;
+}
+
+int f3(void) // also no parameters, but just a little more verbose
+{
+    return 4;
+}
+
+int f4()
+{
+    return 5;
+}
+
+int main()
+{
+    return 0; // required, will not be places automatically
+}

@@ -1,0 +1,60 @@
+class coolClass // No RTTI or inheriting
+{
+    // private
+    int i1;
+    int i2;
+    int i3;
+
+public:
+    bool coolClass(int a)
+    {
+        i1 = a;
+        i2 = a * a;
+        i3 = a * a * a;
+    }
+
+private:
+    void someInternalFunction();
+};
+
+struct coolStruct
+{
+    // public
+    int i1;
+
+private:
+    int i2;
+    int i3;
+
+    void someInternalFunction();
+
+public:
+    bool coolStruct(int a)
+    {
+        i1 = a - 1;
+        i2 = a - 2;
+        i3 = a - 3;
+    }
+};
+
+struct [packed] packedStruct
+{
+    char c1;
+    char c2;
+    char c3;
+}; // just 3 bytes in size
+
+namespace coolNamespace
+{
+    int coolFunction();
+}
+
+namespace [no_mangle] otherNamespace
+{
+    int simpleFunction(); // won't be mangled in a complex way, it will be otherNamespace_simpleFunction
+}
+
+int main()
+{
+    coolStruct s1(2); // no need for initializer block, but will result in UB when used with classes or structs where the initializer can fail. Can also be forced by adding explicit to initializer. It will force both explicit calling even with no or one parameter and force having logic for initializer return values
+}

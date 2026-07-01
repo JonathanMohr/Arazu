@@ -1,0 +1,34 @@
+// this combines both alias and the attribute no_mangle
+alias namespace [no_mangle] niceNamespace
+{
+    void someFunction(); // won't be mangled and just be "someFunction"
+}
+
+struct niceStruct
+{
+    int a;
+};
+
+alias struct otherStruct = niceStruct;
+
+class niceClass
+{
+    int b;
+};
+
+alias class = otherClass = niceClass;
+
+// this combines the no_mangle alias namespaces with import, which is the preferred way to import C libraries if they don't come with some sort of namespace replacement themselves
+alias namespace [no_mangle] C
+{
+    import C <stdio.h>
+}
+
+int main()
+{
+    C::FILE* file = C::fopen("test.txt");
+    C::fputs("This is a nice file\n", file);
+    C::fclose(file);
+
+    return 0;
+}

@@ -1,0 +1,58 @@
+int main()
+{
+    /* Those are all the primitive types, obviously when using import C it will use that platform-specific C types instead */
+
+    // void
+
+    // Self-explanatory
+    i8 a;
+    i16 b;
+    i32 c;
+    i64 d;
+    u8 e;
+    u16 f;
+    u32 g;
+    u64 h;
+
+    uSize i; // pointer-size
+
+
+    int j; // always i32
+    long k; // always i64           long int also works
+    unsigned int l; // always u32
+    unsigned long m; // always u64  unsigned long int also works
+
+    short n; // always i16          short int also works
+    char o; // always i8
+    unsigned short p; // always u16 unsigned short int also works
+    unsigned char q; // always u8
+
+    char8 c1; // always i8
+    char16 c2; // always i16
+    char32 c3; // always i32
+    uchar8 c4; // always u8
+    uchar16 c5; // always u16
+    uchar32 c6; // always u32
+
+    wchar r; // always char32
+    unsigned wchar s; // always uchar32
+
+
+    // Self-explanatory (IEEE 754)
+    float32 t;
+    float64 u;
+    float16 v;
+
+    // Self-explanatory (Google)
+    bfloat16 w;
+
+
+    float x; // always float32
+    double y; // always float64
+
+
+    // Self-explanatory
+    bool z;
+
+    return 0;
+}

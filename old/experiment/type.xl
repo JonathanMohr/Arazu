@@ -1,0 +1,15 @@
+type NewType = int;
+type [strict] OtherType = int;
+
+int main()
+{
+    NewType var = 5;
+
+    int var2 = var; // error, cannot convert types implicit
+    int var2 = (int)var; // okay
+
+    OtherType var3 = 4;
+    int var4 = (int)var3; // will also fail, cannot convert types
+
+    return 0;
+}

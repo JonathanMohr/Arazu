@@ -1,0 +1,30 @@
+alias type NewType = int;
+
+namespace niceNamespace
+{
+    void someFunction();
+}
+
+alias namespace otherNamespace = niceNamespace;
+
+alias namespace anotherNamespace
+{
+    int otherFunction(); // will be mangled as if it was in the global namespace
+}
+
+alias function anotherFunction = niceNamespace::someFunction;
+
+int main()
+{
+    NewType var1 = 3;
+    int var2 = var1; // will work fine
+
+    otherNamespace::someFunction(); // will work
+
+    anotherNamespace::otherFunction(); // wil work
+    otherFunction(); // will not work
+
+    anotherFunction(); // will call niceNamespace::someFunction;
+
+    return 0;
+}

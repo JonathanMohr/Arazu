@@ -1,0 +1,69 @@
+import <vector>
+import <optional>
+
+class CustomClass
+{
+    /*
+        returns 1 on success, 0 if it cannot be used, -1 on errors
+    */
+    int CustomClass()
+    { // just an example, standard library uses bool for constructors, but can be any type, and values can mean anything
+        if (!canBeUsed) return 0;
+        if (errorFunction() != 0) return -1;
+        return 1;
+    }
+
+    ~CustomClass()
+    {
+        destroyStuff();
+    }
+
+    void doStuff()
+    {
+        doSomething();
+        doSomethingElse();
+    }
+};
+
+int main()
+{
+    Vector<int> v1 : bool result
+    {
+        // v1 cannot be used here
+
+        if (!result)
+            return 1; // Could not initialize vector, as v1 is not in current scope, deconstructor will not be called
+    }
+
+    // v1 can be used now, deconstructor will be called on scope exit
+
+    Optional<CustomClass> oc1() : int result
+    {
+        // oc1 cannot be used here
+
+        if (result == 0)
+        {
+            // Unfortunate, but no big problem
+            ireturn Optional::nullopt; // ireturn will set the initialized variable
+        }
+
+        if (result == -1)
+            return 1; // error, because v1 is already in scope, its deconstructor will be called
+
+        // everything is nice
+        break;
+
+        // will never execute
+    };
+
+    // oc1 can be used now, deconstructor will be called
+
+    if (oc1.hasValue())
+    {
+        CustomClass& c1 = oc1.value();
+
+        c1.doStuff();
+    }
+
+    return 0;
+}

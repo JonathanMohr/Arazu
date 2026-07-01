@@ -1,0 +1,17 @@
+import <io>
+
+namespace [no_mangle]
+{
+    import C <stdio.h>
+}
+
+int main()
+{
+    io::stdout.puts("Hello, World!\n");
+
+    FILE* f = fopen("test.txt");
+    fputs("Hello!\n", f);
+    fclose(f);
+    
+    return 0;
+}

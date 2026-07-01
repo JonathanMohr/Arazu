@@ -1,0 +1,27 @@
+// private means private linkage (like static in C or C++ on functions, which is not supported anymore)
+
+private int x = 2;
+
+private void niceFunction()
+{
+
+}
+
+private namespace niceNamespace()
+{
+    // everything in here is private unless it's marked public
+
+
+}
+
+namespace otherNamespace()
+{
+
+}
+
+private alias anotherNamespace = otherNamespace;
+
+int main()
+{
+    return 0;
+}
