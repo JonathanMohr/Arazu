@@ -7,8 +7,7 @@ extern "C" {
 
 #include "../context.h"
 #include "relocation.h"
-
-typedef struct Arazu_Object_Symbol Arazu_Object_Symbol;
+#include "symbol.h"
 
 
 typedef Arazu_u64 Arazu_Object_Section_Flags;
@@ -85,13 +84,18 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_AddSymbol(
     Arazu_Object* object,
 
     Arazu_uValue value,
+
     Arazu_String name,
-    Arazu_Bool defined,
-    Arazu_Bool isGlobal,
+
+    Arazu_String sectionName,
+    Arazu_Object_Symbol_State state,
+
+    Arazu_Object_Symbol_Visibility visibility,
 
     Arazu_Bool hasDebugInformation,
-    Arazu_uValue line,
-    Arazu_uValue column,
+    // Only used when hasDebugInformation is ARAZU_TRUE
+    Arazu_u64 line, // 0-based
+    Arazu_u64 column, // 0-based
     Arazu_String file
 );
 

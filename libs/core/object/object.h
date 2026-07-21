@@ -8,23 +8,7 @@ extern "C" {
 #include <arazu/core/object/object.h>
 
 #include "relocation.h"
-
-struct Arazu_Object_Symbol
-{
-    Arazu_uValue value;
-
-    Arazu_u64 line; // 0-based
-    Arazu_u64 column; // 0-based
-    Arazu_String file;
-
-    Arazu_String name;
-    Arazu_String sectionName;
-
-    Arazu_Bool hasDebugInformation; // use line, column and file only if this is true
-    Arazu_Bool inSection;
-    Arazu_Bool defined; // only used when isSection is false, if true, symbol is absolute, else, symbol is undefined
-    Arazu_Bool isGlobal;
-};
+#include "symbol.h"
 
 struct Arazu_Object_Section
 {

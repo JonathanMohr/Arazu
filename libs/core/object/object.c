@@ -65,7 +65,8 @@ void Arazu_Object_Destroy(const Arazu_Context* ctx, Arazu_Object* object)
 
     if (object->symbolCapacity > 0)
     {
-        // HACK: Not clean, should call destroyer, but symbol currently has nothing to destroy
+        for (Arazu_uValue i = 0; i < object->symbolCount; i++)
+            Arazu_Object_Symbol_Destroy_In_Place(ctx, &object->symbols[i]);
         Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), object->symbols);
     }
 
@@ -173,13 +174,18 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_AddSymbol(
     Arazu_Object* object,
 
     Arazu_uValue value,
+
     Arazu_String name,
-    Arazu_Bool defined,
-    Arazu_Bool isGlobal,
+
+    Arazu_String sectionName,
+    Arazu_Object_Symbol_State state,
+
+    Arazu_Object_Symbol_Visibility visibility,
 
     Arazu_Bool hasDebugInformation,
-    Arazu_uValue line,
-    Arazu_uValue column,
+    // Only used when hasDebugInformation is ARAZU_TRUE
+    Arazu_u64 line, // 0-based
+    Arazu_u64 column, // 0-based
     Arazu_String file
 )
 {
@@ -192,21 +198,8 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_AddSymbol(
 
     Arazu_Object_Symbol* symbol = &object->symbols[object->symbolCount++];
 
-    symbol->value = value;
-
-    if (hasDebugInformation == ARAZU_TRUE)
-    {
-        symbol->hasDebugInformation = ARAZU_TRUE;
-        symbol->line = line;
-        symbol->column = column;
-        symbol->file = file;
-    }
-    else symbol->hasDebugInformation = ARAZU_FALSE;
-
-    symbol->name = name;
-    symbol->inSection = ARAZU_FALSE;
-    symbol->defined = defined;
-    symbol->isGlobal = isGlobal;
+    if (Arazu_Object_Symbol_Create_In_Place(symbol, ctx, value, name, sectionName, state, visibility, hasDebugInformation, line, column, file) != ARAZU_TRUE)
+        return ARAZU_FALSE;
 
     return ARAZU_TRUE;
 }
