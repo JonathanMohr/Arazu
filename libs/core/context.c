@@ -22,7 +22,7 @@ void Arazu_Context_Destroy(Arazu_Context* ctx)
     // TODO: Think about destroying the stringPool
 }
 
-ARAZU_DETAIL_API const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx)
+const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx)
 {
     return &ctx->allocator;
 }
