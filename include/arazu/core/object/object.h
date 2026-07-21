@@ -6,13 +6,7 @@ extern "C" {
 #endif
 
 #include "../context.h"
-
-typedef Arazu_u16 Arazu_Object_Relocation_Type;
-#define ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE    ((Arazu_Object_Relocation_Type)0)
-#define ARAZU_OBJECT_RELOCATION_TYPE_PC_RELATIVE ((Arazu_Object_Relocation_Type)1)
-
-typedef struct Arazu_Object_Relocation Arazu_Object_Relocation;
-
+#include "relocation.h"
 
 typedef struct Arazu_Object_Symbol Arazu_Object_Symbol;
 

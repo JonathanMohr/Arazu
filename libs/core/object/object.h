@@ -7,20 +7,7 @@ extern "C" {
 
 #include <arazu/core/object/object.h>
 
-struct Arazu_Object_Relocation
-{
-    Arazu_Value addend;
-    Arazu_uValue offsetInSection;
-
-    Arazu_String symbol;
-
-    Arazu_u16 size;
-    Arazu_Object_Relocation_Type type;
-    Arazu_Bool isSigned;
-
-    Arazu_Bool littleEndian; // false -> big endian
-    Arazu_Bool isSection; // if symbol is a section
-};
+#include "relocation.h"
 
 struct Arazu_Object_Symbol
 {
