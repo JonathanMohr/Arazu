@@ -6,6 +6,6 @@ typedef void* HINSTANCE;
 typedef unsigned long DWORD;
 typedef void* LPVOID;
 
-__declspec(dllexport) BOOL __stdcall _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved); // NOLINT(bugprone-reserved-identifier)
+BOOL __stdcall _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved); // NOLINT(bugprone-reserved-identifier)
 
 #endif
