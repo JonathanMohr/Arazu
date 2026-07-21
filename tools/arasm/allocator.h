@@ -4,9 +4,7 @@
 #include <arazu/core/context.h>
 
 #if defined(ARAZU_DETAIL_WINDOWS)
-#   include <malloc.h>
-#else
-#   include <stdlib.h>
+    #include <malloc.h>
 #endif
 #include <stdlib.h>
 

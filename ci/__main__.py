@@ -361,6 +361,9 @@ def main() -> bool:
     toolchain.Set_STDC("c99")
     toolchain.Set_STDCPP("c++98")
 
+    if target_os == OS.Linux:
+        toolchain.Add_Define("_POSIX_C_SOURCE", "200809L")
+
     dll_libraries: list[Path] = []
     
     sysroot_path: str | None = args.sysroot
