@@ -7,33 +7,6 @@ extern "C" {
 
 #include <arazu/core/object/object.h>
 
-#include "relocation.h"
-#include "symbol.h"
-
-struct Arazu_Object_Section
-{
-    Arazu_uValue relocationCount;
-    Arazu_uValue symbolCount;
-
-    Arazu_uValue align;
-
-    Arazu_Object_Section_Flags flags;
-
-    Arazu_Size relocationCapacity;
-    Arazu_Size symbolCapacity;
-
-    Arazu_uValue size;
-
-    Arazu_Object_Relocation* relocations;
-    Arazu_Object_Symbol* symbols; // symbols in section
-
-    Arazu_u8* buffer;
-
-    Arazu_String name;
-
-    Arazu_Object_Section_Type type;
-};
-
 struct Arazu_Object
 {
     Arazu_uValue sectionCount;
