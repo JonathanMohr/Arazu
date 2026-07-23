@@ -9,22 +9,22 @@ extern "C" {
 
 struct Arazu_Object_Section
 {
+    Arazu_uValue size;
     Arazu_uValue relocationCount;
     Arazu_uValue symbolCount;
 
     Arazu_uValue align;
 
-    Arazu_uValue size;
-
     Arazu_Object_Section_Flags flags;
 
+    Arazu_Size bufferCapacity;
     Arazu_Size relocationCapacity;
     Arazu_Size symbolCapacity;
 
+    Arazu_u8* buffer;
+
     Arazu_Object_Relocation* relocations;
     Arazu_Object_Symbol* symbols; // symbols in this section
-
-    Arazu_u8* buffer;
 
     Arazu_String name;
 

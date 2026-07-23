@@ -19,6 +19,7 @@ struct Arazu_Object
     Arazu_Object_Symbol* symbols; // absolute and undefined symbols
 
     Arazu_String architecture; // just alphanumerical (all lowercase) + '_'
+    Arazu_String abi; // just alphanumerical (all lowercase) + '_'
     Arazu_u16 bitMode;
 };
 

@@ -1,7 +1,11 @@
 #include "relocation.h"
-#include "arazu/core/object/relocation.h"
 
-Arazu_Bool Arazu_Object_Relocation_Create_In_Place(
+ARAZU_DETAIL_API Arazu_Size Arazu_Object_Relocation_Size(void)
+{
+    return sizeof(Arazu_Object_Relocation);
+}
+
+Arazu_Bool Arazu_Object_Relocation_Create(
     Arazu_Object_Relocation* out,
     const Arazu_Context* ctx,
 
@@ -36,103 +40,63 @@ Arazu_Bool Arazu_Object_Relocation_Create_In_Place(
     return ARAZU_TRUE;
 }
 
-void Arazu_Object_Relocation_Destroy_In_Place(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+void Arazu_Object_Relocation_Destroy(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     (void)relocation;
 }
 
-ARAZU_DETAIL_API Arazu_Size Arazu_Object_Relocation_Size(void)
+Arazu_Bool Arazu_Object_Relocation_Copy(Arazu_Object_Relocation* out, const Arazu_Context* newCtx, const Arazu_Object_Relocation* original)
 {
-    return sizeof(Arazu_Object_Relocation);
+    (void)newCtx;
+    *out = *original;
+    return ARAZU_TRUE;
 }
 
-Arazu_Object_Relocation* Arazu_Object_Relocation_Create(
-    const Arazu_Context* ctx,
 
-    Arazu_Value addend,
-    Arazu_uValue offsetInSection,
-
-    Arazu_String symbol,
-
-    Arazu_u16 size, // 8, 16, 24, 32, 64, ...
-    Arazu_Object_Relocation_Type type,
-    Arazu_Bool isSigned,
-
-    Arazu_Bool littleEndian,
-    Arazu_Bool isSection // is symbol a section
-)
-{
-    Arazu_Object_Relocation* relocation = Arazu_Context_GetAllocator(ctx)->allocate(Arazu_Context_GetAllocator(ctx), sizeof(Arazu_Object_Relocation));
-    if (relocation == ARAZU_NULL) return ARAZU_NULL;
-
-    if (Arazu_Object_Relocation_Create_In_Place(relocation,
-        ctx,
-        addend,
-        offsetInSection,
-        symbol,
-        size,
-        type,
-        isSigned,
-        littleEndian,
-        isSection) != ARAZU_TRUE)
-    {
-        Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), relocation);
-        return ARAZU_NULL;
-    }
-
-    return relocation;
-}
-
-void Arazu_Object_Relocation_Destroy(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
-{
-    Arazu_Object_Relocation_Destroy_In_Place(ctx, relocation);
-    Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), relocation);
-}
-
-Arazu_Value Arazu_Object_Relocation_GetAddend(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_Value Arazu_Object_Relocation_GetAddend(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->addend;
 }
 
-Arazu_uValue Arazu_Object_Relocation_GetOffsetInSection(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_uValue Arazu_Object_Relocation_GetOffsetInSection(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->offsetInSection;
 }
 
-Arazu_String Arazu_Object_Relocation_GetSymbol(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_String Arazu_Object_Relocation_GetSymbol(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->symbol;
 }
 
-Arazu_u16 Arazu_Object_Relocation_GetSize(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_u16 Arazu_Object_Relocation_GetSize(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->size;
 }
 
-Arazu_Object_Relocation_Type Arazu_Object_Relocation_GetType(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_Object_Relocation_Type Arazu_Object_Relocation_GetType(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->type;
 }
 
-Arazu_Bool Arazu_Object_Relocation_IsSigned(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_Bool Arazu_Object_Relocation_IsSigned(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->isSigned;
 }
 
-Arazu_Bool Arazu_Object_Relocation_IsLittleEndian(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_Bool Arazu_Object_Relocation_IsLittleEndian(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->littleEndian;
 }
 
-Arazu_Bool Arazu_Object_Relocation_IsSymbolSection(const Arazu_Context* ctx, Arazu_Object_Relocation* relocation)
+Arazu_Bool Arazu_Object_Relocation_IsSymbolSection(const Arazu_Context* ctx, const Arazu_Object_Relocation* relocation)
 {
     (void)ctx;
     return relocation->isSection;
