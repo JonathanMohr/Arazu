@@ -38,14 +38,17 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Section_Create(
 /** Free resources of section that was created in-place */
 ARAZU_DETAIL_API void Arazu_Object_Section_Destroy(const Arazu_Context* ctx, Arazu_Object_Section* section);
 
+/** Copy section */
+ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Section_Copy(Arazu_Object_Section* out, const Arazu_Context* newCtx, const Arazu_Object_Section* original);
+
 
 /** Add byte to buffer, may reserve memory */
 ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Section_PushByte(const Arazu_Context* ctx, Arazu_Object_Section* section, Arazu_u8 byte);
 
-/** Add byte to buffer, may reserve memory */
+/** Add relocation, may reserve memory */
 ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Section_AddRelocation(const Arazu_Context* ctx, Arazu_Object_Section* section, Arazu_Object_Relocation* relocation);
 
-/** Add byte to buffer, may reserve memory */
+/** Add symbol, may reserve memory */
 ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Section_AddSymbol(const Arazu_Context* ctx, Arazu_Object_Section* section, Arazu_Object_Symbol* symbol);
 
 

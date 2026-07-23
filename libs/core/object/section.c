@@ -1,6 +1,9 @@
 #include "section.h"
 
+#include "arazu/core/object/relocation.h"
 #include "arazu/core/object/section.h"
+#include "arazu/core/object/symbol.h"
+#include "arazu/core/types.h"
 #include "symbol.h"
 #include "relocation.h"
 
@@ -74,6 +77,61 @@ void Arazu_Object_Section_Destroy(const Arazu_Context* ctx, Arazu_Object_Section
     }
 }
 
+Arazu_Bool Arazu_Object_Section_Copy(Arazu_Object_Section* out, const Arazu_Context* newCtx, const Arazu_Object_Section* original)
+{
+    Arazu_u8* newBuffer = newCtx->allocator.allocate(&newCtx->allocator, out->bufferCapacity * sizeof(Arazu_u8));
+    if (newBuffer == ARAZU_NULL)
+        return ARAZU_FALSE;
+
+    Arazu_Object_Relocation* newRelocations = newCtx->allocator.allocate(&newCtx->allocator, out->relocationCapacity * sizeof(Arazu_Object_Relocation));
+    if (newRelocations == ARAZU_NULL)
+    {
+        newCtx->allocator.free(&newCtx->allocator, newBuffer);
+        return ARAZU_FALSE;
+    }
+
+    Arazu_Object_Symbol* newSymbols = newCtx->allocator.allocate(&newCtx->allocator, out->symbolCapacity * sizeof(Arazu_Object_Symbol));
+    if (newSymbols == ARAZU_NULL)
+    {
+        newCtx->allocator.free(&newCtx->allocator, newBuffer);
+        newCtx->allocator.free(&newCtx->allocator, newRelocations);
+        return ARAZU_FALSE;
+    }
+
+    for (Arazu_uValue i = 0; i < original->size; i++)
+        newBuffer[i] = original->buffer[i];
+
+    for (Arazu_uValue i = 0; i < original->relocationCount; i++)
+    {
+        if (Arazu_Object_Relocation_Copy(&newRelocations[i], newCtx, &original->relocations[i]) != ARAZU_TRUE)
+        {
+            newCtx->allocator.free(&newCtx->allocator, newBuffer);
+            newCtx->allocator.free(&newCtx->allocator, newRelocations);
+            newCtx->allocator.free(&newCtx->allocator, newSymbols);
+            return ARAZU_FALSE;
+        }
+    }
+
+    for (Arazu_uValue i = 0; i < original->symbolCount; i++)
+    {
+        if (Arazu_Object_Symbol_Copy(&newSymbols[i], newCtx, &original->symbols[i]) != ARAZU_TRUE)
+        {
+            newCtx->allocator.free(&newCtx->allocator, newBuffer);
+            newCtx->allocator.free(&newCtx->allocator, newRelocations);
+            newCtx->allocator.free(&newCtx->allocator, newSymbols);
+            return ARAZU_FALSE;
+        }
+    }
+
+    *out = *original;
+
+    out->buffer = newBuffer;
+    out->relocations = newRelocations;
+    out->symbols = newSymbols;
+
+    return ARAZU_TRUE;
+}
+
 
 Arazu_Bool Arazu_Object_Section_PushByte(const Arazu_Context* ctx, Arazu_Object_Section* section, Arazu_u8 byte)
 {
@@ -98,7 +156,7 @@ Arazu_Bool Arazu_Object_Section_AddRelocation(const Arazu_Context* ctx, Arazu_Ob
 
 Arazu_Bool Arazu_Object_Section_AddSymbol(const Arazu_Context* ctx, Arazu_Object_Section* section, Arazu_Object_Symbol* symbol)
 {
-    if (Arazu_Object_Section_ReserveSymbolCount(ctx, section, section->symbolCapacity + 1) != ARAZU_TRUE)
+    if (Arazu_Object_Section_ReserveSymbolCount(ctx, section, section->symbolCount + 1) != ARAZU_TRUE)
         return ARAZU_FALSE;
 
     if (Arazu_Object_Symbol_Copy(&section->symbols[section->symbolCount++], ctx, symbol) != ARAZU_TRUE)
@@ -113,7 +171,7 @@ Arazu_Bool Arazu_Object_Section_ReserveBufferSize(const Arazu_Context* ctx, Araz
     if (section->bufferCapacity >= size)
         return ARAZU_TRUE;
 
-    Arazu_u8* newBuffer = ctx->allocator.allocate(&ctx->allocator, size);
+    Arazu_u8* newBuffer = ctx->allocator.allocate(&ctx->allocator, size * sizeof(Arazu_u8));
     if (!newBuffer)
         return ARAZU_FALSE;
 
@@ -131,7 +189,7 @@ Arazu_Bool Arazu_Object_Section_ReserveRelocationCount(const Arazu_Context* ctx,
     if (section->relocationCapacity >= count)
         return ARAZU_TRUE;
 
-    Arazu_Object_Relocation* newRelocations = ctx->allocator.allocate(&ctx->allocator, count);
+    Arazu_Object_Relocation* newRelocations = ctx->allocator.allocate(&ctx->allocator, count * sizeof(Arazu_Object_Relocation));
     if (!newRelocations)
         return ARAZU_FALSE;
 
@@ -149,7 +207,7 @@ Arazu_Bool Arazu_Object_Section_ReserveSymbolCount(const Arazu_Context* ctx, Ara
     if (section->symbolCapacity >= count)
         return ARAZU_TRUE;
 
-    Arazu_Object_Symbol* newSymbols = ctx->allocator.allocate(&ctx->allocator, count);
+    Arazu_Object_Symbol* newSymbols = ctx->allocator.allocate(&ctx->allocator, count * sizeof(Arazu_Object_Symbol));
     if (!newSymbols)
         return ARAZU_FALSE;
 

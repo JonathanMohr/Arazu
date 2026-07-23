@@ -138,13 +138,13 @@ static Arazu_String sp__intern(Arazu_StringPool* pool, const char* str)
     return (Arazu_String)(Arazu_PointerSize)interned;
 }
 
-static Arazu_Bool sp__compare(Arazu_StringPool* pool, Arazu_String a, Arazu_String b)
+static Arazu_Bool sp__compare(const Arazu_StringPool* pool, Arazu_String a, Arazu_String b)
 {
     (void)pool;
     return (a == b) ? ARAZU_TRUE : ARAZU_FALSE;
 }
 
-static const char* sp__to_cstring(Arazu_StringPool* pool, Arazu_String str)
+static const char* sp__to_cstring(const Arazu_StringPool* pool, Arazu_String str)
 {
     (void)pool;
     return (const char*)(Arazu_PointerSize)str;

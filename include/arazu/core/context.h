@@ -16,10 +16,10 @@ typedef struct Arazu_StringPool
     Arazu_String (*intern)(struct Arazu_StringPool* pool, const char* str);
 
     /** Compares two interned strings, returns ARAZU_TRUE if equal */
-    Arazu_Bool (*compare)(struct Arazu_StringPool* pool, Arazu_String a, Arazu_String b);
+    Arazu_Bool (*compare)(const struct Arazu_StringPool* pool, Arazu_String a, Arazu_String b);
 
     /** Returns a temporarily valid const char* for the given handle, valid until the next intern call */
-    const char* (*toCString)(struct Arazu_StringPool* pool, Arazu_String str);
+    const char* (*toCString)(const struct Arazu_StringPool* pool, Arazu_String str);
 
     /** Destroys the pool and frees all interned strings */
     void (*destroy)(struct Arazu_StringPool* pool);
