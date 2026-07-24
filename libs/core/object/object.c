@@ -1,6 +1,8 @@
 #include "object.h"
 
 #include "arazu/core/object/section.h"
+#include "arazu/core/object/symbol.h"
+#include "arazu/core/types.h"
 #include "section.h"
 #include "symbol.h"
 #include "relocation.h"
@@ -81,36 +83,50 @@ void Arazu_Object_Destroy(const Arazu_Context* ctx, Arazu_Object* object)
 
 Arazu_Bool Arazu_Object_Copy(Arazu_Object* out, const Arazu_Context* newCtx, const Arazu_Object* original)
 {
-    Arazu_Object_Section* newSections = newCtx->allocator.allocate(&newCtx->allocator, out->sectionCapacity * sizeof(Arazu_Object_Section));
-    if (newSections == ARAZU_NULL)
+    Arazu_Object_Section* newSections = ARAZU_NULL;
+    if (original->sectionCapacity > 0)
     {
-        return ARAZU_FALSE;
-    }
-
-    Arazu_Object_Symbol* newSymbols = newCtx->allocator.allocate(&newCtx->allocator, out->symbolCapacity * sizeof(Arazu_Object_Symbol));
-    if (newSymbols == ARAZU_NULL)
-    {
-        newCtx->allocator.free(&newCtx->allocator, newSections);
-        return ARAZU_FALSE;
-    }
-
-    for (Arazu_uValue i = 0; i < original->sectionCount; i++)
-    {
-        if (Arazu_Object_Section_Copy(&newSections[i], newCtx, &original->sections[i]) != ARAZU_TRUE)
+        newSections = newCtx->allocator.allocate(&newCtx->allocator, original->sectionCapacity * sizeof(Arazu_Object_Section));
+        if (newSections == ARAZU_NULL)
         {
-            newCtx->allocator.free(&newCtx->allocator, newSections);
-            newCtx->allocator.free(&newCtx->allocator, newSymbols);
             return ARAZU_FALSE;
         }
     }
 
-    for (Arazu_uValue i = 0; i < original->symbolCount; i++)
+    Arazu_Object_Symbol* newSymbols = ARAZU_NULL;
+    if (original->symbolCapacity > 0)
     {
-        if (Arazu_Object_Symbol_Copy(&newSymbols[i], newCtx, &original->symbols[i]) != ARAZU_TRUE)
+        newSymbols = newCtx->allocator.allocate(&newCtx->allocator, original->symbolCapacity * sizeof(Arazu_Object_Symbol));
+        if (newSymbols == ARAZU_NULL)
         {
             newCtx->allocator.free(&newCtx->allocator, newSections);
-            newCtx->allocator.free(&newCtx->allocator, newSymbols);
             return ARAZU_FALSE;
+        }
+    }
+
+    if (newSections != ARAZU_NULL)
+    {
+        for (Arazu_uValue i = 0; i < original->sectionCount; i++)
+        {
+            if (Arazu_Object_Section_Copy(&newSections[i], newCtx, &original->sections[i]) != ARAZU_TRUE)
+            {
+                newCtx->allocator.free(&newCtx->allocator, newSections);
+                newCtx->allocator.free(&newCtx->allocator, newSymbols);
+                return ARAZU_FALSE;
+            }
+        }
+    }
+
+    if (newSymbols != ARAZU_NULL)
+    {
+        for (Arazu_uValue i = 0; i < original->symbolCount; i++)
+        {
+            if (Arazu_Object_Symbol_Copy(&newSymbols[i], newCtx, &original->symbols[i]) != ARAZU_TRUE)
+            {
+                newCtx->allocator.free(&newCtx->allocator, newSections);
+                newCtx->allocator.free(&newCtx->allocator, newSymbols);
+                return ARAZU_FALSE;
+            }
         }
     }
 
@@ -128,8 +144,10 @@ Arazu_Bool Arazu_Object_AddSection(const Arazu_Context* ctx, Arazu_Object* objec
     if (Arazu_Object_ReserveSectionCount(ctx, object, object->sectionCount + 1) != ARAZU_TRUE)
         return ARAZU_FALSE;
 
-    if (Arazu_Object_Section_Copy(&object->sections[object->sectionCount++], ctx, section) != ARAZU_TRUE)
+    if (Arazu_Object_Section_Copy(&object->sections[object->sectionCount], ctx, section) != ARAZU_TRUE)
         return ARAZU_FALSE;
+
+    object->sectionCount++;
 
     return ARAZU_TRUE;
 }
@@ -139,8 +157,10 @@ Arazu_Bool Arazu_Object_AddSymbol(const Arazu_Context* ctx, Arazu_Object* object
     if (Arazu_Object_ReserveSymbolCount(ctx, object, object->symbolCount + 1) != ARAZU_TRUE)
         return ARAZU_FALSE;
 
-    if (Arazu_Object_Symbol_Copy(&object->symbols[object->symbolCount++], ctx, symbol) != ARAZU_TRUE)
+    if (Arazu_Object_Symbol_Copy(&object->symbols[object->symbolCount], ctx, symbol) != ARAZU_TRUE)
         return ARAZU_FALSE;
+
+    object->symbolCount++;
 
     return ARAZU_TRUE;
 }
@@ -161,6 +181,8 @@ Arazu_Bool Arazu_Object_ReserveSectionCount(const Arazu_Context* ctx, Arazu_Obje
     ctx->allocator.free(&ctx->allocator, object->sections);
     object->sections = newSections;
 
+    object->sectionCapacity = count * sizeof(Arazu_Object_Section);
+
     return ARAZU_TRUE;
 }
 
@@ -178,6 +200,8 @@ Arazu_Bool Arazu_Object_ReserveSymbolCount(const Arazu_Context* ctx, Arazu_Objec
 
     ctx->allocator.free(&ctx->allocator, object->symbols);
     object->symbols = newSymbols;
+
+    object->symbolCapacity = count * sizeof(Arazu_Object_Symbol);
 
     return ARAZU_TRUE;
 }

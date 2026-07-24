@@ -31,7 +31,7 @@ class Toolchain:
         self.defines: list[tuple[str, str]] = []
         self.includeDirs: list[Path] = []
         self.libraryDirs: list[Path] = []
-        self.libraries: list[str] = []
+        self.libraries: list[tuple[str, Path | None]] = []
 
         self.stdc: str = "c99"
         self.stdcpp: str = "c++98"
@@ -57,8 +57,8 @@ class Toolchain:
     def Add_Library_Directory(self, dir: Path):
         self.libraryDirs.append(dir)
 
-    def Add_Library(self, lib: str):
-        self.libraries.append(lib)
+    def Add_Library(self, lib: str, path: Path | None = None):
+        self.libraries.append((lib, path))
 
     
     def Compile_C_Source(self, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:

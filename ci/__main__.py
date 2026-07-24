@@ -478,6 +478,7 @@ def main() -> bool:
             coreBuildMode = copy.copy(buildMode)
             
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
+            coreDyn, coreS = coreLibrary
             
             dist_include_dir, dist_lib_dir = StageLibraries(logger, dist_dir, include_dir, [coreLibrary])
 
@@ -485,7 +486,7 @@ def main() -> bool:
             arasmToolchain = copy.copy(toolchain)
             arasmToolchain.Add_Include_Directory(tools_dir / "arasm")
             arasmToolchain.Add_Library_Directory(dist_lib_dir)
-            arasmToolchain.Add_Library("arazus")
+            arasmToolchain.Add_Library("arazus", coreS[0]) # HACK: Extremely ugly
 
             arasmBuildMode = copy.copy(buildMode)
             arasmBuildMode.host = HOST.HOSTED

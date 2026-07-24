@@ -79,47 +79,68 @@ void Arazu_Object_Section_Destroy(const Arazu_Context* ctx, Arazu_Object_Section
 
 Arazu_Bool Arazu_Object_Section_Copy(Arazu_Object_Section* out, const Arazu_Context* newCtx, const Arazu_Object_Section* original)
 {
-    Arazu_u8* newBuffer = newCtx->allocator.allocate(&newCtx->allocator, out->bufferCapacity * sizeof(Arazu_u8));
-    if (newBuffer == ARAZU_NULL)
-        return ARAZU_FALSE;
-
-    Arazu_Object_Relocation* newRelocations = newCtx->allocator.allocate(&newCtx->allocator, out->relocationCapacity * sizeof(Arazu_Object_Relocation));
-    if (newRelocations == ARAZU_NULL)
+    Arazu_u8* newBuffer = ARAZU_NULL;
+    if (original->bufferCapacity > 0)
     {
-        newCtx->allocator.free(&newCtx->allocator, newBuffer);
-        return ARAZU_FALSE;
+        newBuffer = newCtx->allocator.allocate(&newCtx->allocator, original->bufferCapacity * sizeof(Arazu_u8));
+        if (newBuffer == ARAZU_NULL)
+            return ARAZU_FALSE;
     }
 
-    Arazu_Object_Symbol* newSymbols = newCtx->allocator.allocate(&newCtx->allocator, out->symbolCapacity * sizeof(Arazu_Object_Symbol));
-    if (newSymbols == ARAZU_NULL)
+    Arazu_Object_Relocation* newRelocations = ARAZU_NULL;
+    if (original->relocationCapacity > 0)
     {
-        newCtx->allocator.free(&newCtx->allocator, newBuffer);
-        newCtx->allocator.free(&newCtx->allocator, newRelocations);
-        return ARAZU_FALSE;
-    }
-
-    for (Arazu_uValue i = 0; i < original->size; i++)
-        newBuffer[i] = original->buffer[i];
-
-    for (Arazu_uValue i = 0; i < original->relocationCount; i++)
-    {
-        if (Arazu_Object_Relocation_Copy(&newRelocations[i], newCtx, &original->relocations[i]) != ARAZU_TRUE)
+        newRelocations = newCtx->allocator.allocate(&newCtx->allocator, original->relocationCapacity * sizeof(Arazu_Object_Relocation));
+        if (newRelocations == ARAZU_NULL)
         {
             newCtx->allocator.free(&newCtx->allocator, newBuffer);
-            newCtx->allocator.free(&newCtx->allocator, newRelocations);
-            newCtx->allocator.free(&newCtx->allocator, newSymbols);
             return ARAZU_FALSE;
         }
     }
 
-    for (Arazu_uValue i = 0; i < original->symbolCount; i++)
+    Arazu_Object_Symbol* newSymbols = ARAZU_NULL;
+    if (original->symbolCapacity > 0)
     {
-        if (Arazu_Object_Symbol_Copy(&newSymbols[i], newCtx, &original->symbols[i]) != ARAZU_TRUE)
+        newSymbols = newCtx->allocator.allocate(&newCtx->allocator, original->symbolCapacity * sizeof(Arazu_Object_Symbol));
+        if (newSymbols == ARAZU_NULL)
         {
             newCtx->allocator.free(&newCtx->allocator, newBuffer);
             newCtx->allocator.free(&newCtx->allocator, newRelocations);
-            newCtx->allocator.free(&newCtx->allocator, newSymbols);
             return ARAZU_FALSE;
+        }
+    }
+
+    if (newBuffer != ARAZU_NULL)
+    {
+        for (Arazu_uValue i = 0; i < original->size; i++)
+            newBuffer[i] = original->buffer[i];
+    }
+
+    if (newRelocations != ARAZU_NULL)
+    {
+        for (Arazu_uValue i = 0; i < original->relocationCount; i++)
+        {
+            if (Arazu_Object_Relocation_Copy(&newRelocations[i], newCtx, &original->relocations[i]) != ARAZU_TRUE)
+            {
+                newCtx->allocator.free(&newCtx->allocator, newBuffer);
+                newCtx->allocator.free(&newCtx->allocator, newRelocations);
+                newCtx->allocator.free(&newCtx->allocator, newSymbols);
+                return ARAZU_FALSE;
+            }
+        }
+    }
+
+    if (newSymbols != ARAZU_NULL)
+    {
+        for (Arazu_uValue i = 0; i < original->symbolCount; i++)
+        {
+            if (Arazu_Object_Symbol_Copy(&newSymbols[i], newCtx, &original->symbols[i]) != ARAZU_TRUE)
+            {
+                newCtx->allocator.free(&newCtx->allocator, newBuffer);
+                newCtx->allocator.free(&newCtx->allocator, newRelocations);
+                newCtx->allocator.free(&newCtx->allocator, newSymbols);
+                return ARAZU_FALSE;
+            }
         }
     }
 
@@ -148,8 +169,10 @@ Arazu_Bool Arazu_Object_Section_AddRelocation(const Arazu_Context* ctx, Arazu_Ob
     if (Arazu_Object_Section_ReserveRelocationCount(ctx, section, section->relocationCount + 1) != ARAZU_TRUE)
         return ARAZU_FALSE;
 
-    if (Arazu_Object_Relocation_Copy(&section->relocations[section->relocationCount++], ctx, relocation) != ARAZU_TRUE)
+    if (Arazu_Object_Relocation_Copy(&section->relocations[section->relocationCount], ctx, relocation) != ARAZU_TRUE)
         return ARAZU_FALSE;
+
+    section->relocationCount++;
 
     return ARAZU_TRUE;
 }
@@ -159,8 +182,10 @@ Arazu_Bool Arazu_Object_Section_AddSymbol(const Arazu_Context* ctx, Arazu_Object
     if (Arazu_Object_Section_ReserveSymbolCount(ctx, section, section->symbolCount + 1) != ARAZU_TRUE)
         return ARAZU_FALSE;
 
-    if (Arazu_Object_Symbol_Copy(&section->symbols[section->symbolCount++], ctx, symbol) != ARAZU_TRUE)
+    if (Arazu_Object_Symbol_Copy(&section->symbols[section->symbolCount], ctx, symbol) != ARAZU_TRUE)
         return ARAZU_FALSE;
+
+    section->symbolCount++;
 
     return ARAZU_TRUE;
 }
@@ -181,6 +206,8 @@ Arazu_Bool Arazu_Object_Section_ReserveBufferSize(const Arazu_Context* ctx, Araz
     ctx->allocator.free(&ctx->allocator, section->buffer);
     section->buffer = newBuffer;
 
+    section->bufferCapacity = size * sizeof(Arazu_u8);
+
     return ARAZU_TRUE;
 }
 
@@ -199,6 +226,8 @@ Arazu_Bool Arazu_Object_Section_ReserveRelocationCount(const Arazu_Context* ctx,
     ctx->allocator.free(&ctx->allocator, section->relocations);
     section->relocations = newRelocations;
 
+    section->relocationCapacity = count * sizeof(Arazu_Object_Relocation);
+
     return ARAZU_TRUE;
 }
 
@@ -216,6 +245,8 @@ Arazu_Bool Arazu_Object_Section_ReserveSymbolCount(const Arazu_Context* ctx, Ara
 
     ctx->allocator.free(&ctx->allocator, section->symbols);
     section->symbols = newSymbols;
+
+    section->symbolCapacity = count * sizeof(Arazu_Object_Symbol);
 
     return ARAZU_TRUE;
 }

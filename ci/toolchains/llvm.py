@@ -499,8 +499,12 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 
     args.extend([*map(str, libraries)])
 
+    lib_deps: list[Path] = []
     for library in self.libraries:
-        args.append(f"-l{library}")
+        lib, path = library
+        args.append(f"-l{lib}")
+        if path is not None:
+            lib_deps.append(path)
 
     flags: list[str] = Get_Link_Flags(mode)
     flags.append(f"--target={Get_Target(mode)}")
@@ -517,7 +521,7 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
         "-o", str(executable)
     ])
 
-    content_hash = cache.hash_files([*objects, *libraries], args, self.context.logger)
+    content_hash = cache.hash_files([*objects, *libraries, *lib_deps], args, self.context.logger)
 
     rebuild = not self.context.buildCache.is_up_to_date(executable, content_hash)
     if mode.debuginfo and debug_info:
