@@ -194,6 +194,36 @@ def Copy_Path(logger: logging.Logger, src: Path, dst: Path):
         logger.warning(f"{src} does not exist")
 
 
+def StageOther(logger: logging.Logger, dist_dir: Path):
+    project_root = Path(".")
+
+    readme = project_root / "README.md"
+    license = project_root / "LICENSE"
+
+    dist_license = dist_dir / "LICENSE"
+
+    dist_share = dist_dir / "share"
+
+    dist_doc = dist_share / "doc" / "arazu"
+
+    # License
+    dist_license.parent.mkdir(parents=True, exist_ok=True)
+    Copy_Path(logger, license, dist_license)
+
+    # share/
+    dist_share.mkdir(parents=True, exist_ok=True)
+
+    ## doc/
+    dist_doc.mkdir(parents=True, exist_ok=True)
+
+    ### LICENSE
+    dist_doc_license = dist_doc / "LICENSE"
+    Copy_Path(logger, license, dist_doc_license)
+
+    ### README.md
+    dist_doc_readme = dist_doc / "README.md"
+    Copy_Path(logger, readme, dist_doc_readme)
+
 def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]) -> tuple[Path, Path]:
     license_path = Path("LICENSE")
     license = dist_dir / "LICENSE"
@@ -464,6 +494,8 @@ def main() -> bool:
             
 
             StageExecutables(logger, dist_dir, [arasmExecutable])
+
+            StageOther(logger, dist_dir)
 
         else:
             pass
