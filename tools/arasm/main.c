@@ -79,7 +79,7 @@ int main(int argc, const char* argv[])
     }
 
     Arazu_Object_Symbol* symbol = Arazu_Context_GetAllocator(context)->allocate(Arazu_Context_GetAllocator(context), Arazu_Object_Symbol_Size());
-    if (section == ARAZU_NULL)
+    if (symbol == ARAZU_NULL)
     {
         fputs("Failed to allocate memory for symbol\n", stderr);
 
@@ -94,7 +94,7 @@ int main(int argc, const char* argv[])
     }
 
     Arazu_Object_Relocation* relocation = Arazu_Context_GetAllocator(context)->allocate(Arazu_Context_GetAllocator(context), Arazu_Object_Relocation_Size());
-    if (section == ARAZU_NULL)
+    if (relocation == ARAZU_NULL)
     {
         fputs("Failed to allocate memory for relocation\n", stderr);
 
