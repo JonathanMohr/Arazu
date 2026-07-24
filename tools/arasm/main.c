@@ -95,7 +95,71 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // ..., bytes, symbols, relocations
+    if (Arazu_Object_Section_ReserveBufferSize(context, section, 9) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 9 bytes for .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+
+        Arazu_Object_Destroy(context, object);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    // Should work now
+
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+
+    if (Arazu_Object_Section_ReserveSymbolCount(context, section, 2) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 2 symbol for .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+
+        Arazu_Object_Destroy(context, object);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_Object_Section_ReserveRelocationCount(context, section, 1) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 1 relocation for .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+
+        Arazu_Object_Destroy(context, object);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    // mov eax, 0x00 ; relocation
+    (void)Arazu_Object_Section_PushByte(context, section, 0xB8);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+
+    // inc [eax + 4]
+    (void)Arazu_Object_Section_PushByte(context, section, 0xFF);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x40);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x04);
+
+    // ret
+    (void)Arazu_Object_Section_PushByte(context, section, 0xC3);
+
+    // symbols, relocations
 
     if (Arazu_Object_AddSection(context, object, section) != ARAZU_TRUE)
     {
@@ -129,7 +193,63 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // ..., bytes, symbols
+    if (Arazu_Object_Section_ReserveBufferSize(context, section, 23) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 23 bytes for .data\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+
+        Arazu_Object_Destroy(context, object);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    // Should work now
+    (void)Arazu_Object_Section_PushByte(context, section, 'H');
+    (void)Arazu_Object_Section_PushByte(context, section, 'e');
+    (void)Arazu_Object_Section_PushByte(context, section, 'l');
+    (void)Arazu_Object_Section_PushByte(context, section, 'l');
+    (void)Arazu_Object_Section_PushByte(context, section, 'o');
+    (void)Arazu_Object_Section_PushByte(context, section, ',');
+    (void)Arazu_Object_Section_PushByte(context, section, ' ');
+    (void)Arazu_Object_Section_PushByte(context, section, 'W');
+    (void)Arazu_Object_Section_PushByte(context, section, 'o');
+    (void)Arazu_Object_Section_PushByte(context, section, 'r');
+    (void)Arazu_Object_Section_PushByte(context, section, 'l');
+    (void)Arazu_Object_Section_PushByte(context, section, 'd');
+    (void)Arazu_Object_Section_PushByte(context, section, '!');
+    (void)Arazu_Object_Section_PushByte(context, section, '\n');
+    (void)Arazu_Object_Section_PushByte(context, section, '\0');
+
+    (void)Arazu_Object_Section_PushByte(context, section, 0x87);
+    (void)Arazu_Object_Section_PushByte(context, section, 0xD6);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x12);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
+
+    if (Arazu_Object_Section_ReserveSymbolCount(context, section, 2) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 2 symbols for .data\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+
+        Arazu_Object_Destroy(context, object);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    // symbols
 
     if (Arazu_Object_AddSection(context, object, section) != ARAZU_TRUE)
     {
