@@ -4,8 +4,6 @@
 #include <arazu/core/object/object.h>
 
 #include "allocator.h"
-#include "arazu/core/object/section.h"
-#include "arazu/core/types.h"
 #include "string_pool.h"
 
 int main(int argc, const char* argv[])
@@ -57,6 +55,7 @@ int main(int argc, const char* argv[])
         fputs("Failed to reserve 2 sections in object\n", stderr);
 
         Arazu_Object_Destroy(context, object);
+
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -65,19 +64,51 @@ int main(int argc, const char* argv[])
     }
 
 
-    // TODO: Add sections and global symbols
     Arazu_Object_Section* section = Arazu_Context_GetAllocator(context)->allocate(Arazu_Context_GetAllocator(context), Arazu_Object_Section_Size());
     if (section == ARAZU_NULL)
     {
         fputs("Failed to allocate memory for section\n", stderr);
 
         Arazu_Object_Destroy(context, object);
+
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
         stringPool.destroy(&stringPool);
         return 1;
     }
+
+    Arazu_Object_Symbol* symbol = Arazu_Context_GetAllocator(context)->allocate(Arazu_Context_GetAllocator(context), Arazu_Object_Symbol_Size());
+    if (section == ARAZU_NULL)
+    {
+        fputs("Failed to allocate memory for symbol\n", stderr);
+
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Relocation* relocation = Arazu_Context_GetAllocator(context)->allocate(Arazu_Context_GetAllocator(context), Arazu_Object_Relocation_Size());
+    if (section == ARAZU_NULL)
+    {
+        fputs("Failed to allocate memory for relocation\n", stderr);
+
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
 
     // .text
 
@@ -85,9 +116,12 @@ int main(int argc, const char* argv[])
     {
         fputs("Failed to create .text section\n", stderr);
 
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
+        Arazu_Object_Section_Destroy(context, section);
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -100,9 +134,11 @@ int main(int argc, const char* argv[])
         fputs("Failed to reserve 9 bytes for .text\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -110,18 +146,16 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // Should work now
-
-    (void)Arazu_Object_Section_PushByte(context, section, 0x00);
-
     if (Arazu_Object_Section_ReserveSymbolCount(context, section, 2) != ARAZU_TRUE)
     {
         fputs("Failed to reserve 2 symbol for .text\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -134,9 +168,11 @@ int main(int argc, const char* argv[])
         fputs("Failed to reserve 1 relocation for .text\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -159,16 +195,127 @@ int main(int argc, const char* argv[])
     // ret
     (void)Arazu_Object_Section_PushByte(context, section, 0xC3);
 
-    // symbols, relocations
+    if (Arazu_Object_Symbol_Create(symbol, context, 0, stringPool.intern(&stringPool, "test_function"), stringPool.intern(&stringPool, ".text"), ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION, ARAZU_OBJECT_SYMBOL_VISIBILITY_GLOBAL, ARAZU_TRUE, 2, 0, stringPool.intern(&stringPool, "test.asm")) != ARAZU_TRUE)
+    {
+        fputs("Failed to create symbol test_function in .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_Object_Section_AddSymbol(context, section, symbol) != ARAZU_TRUE)
+    {
+        fputs("Failed to add symbol test_function in .text\n", stderr);
+
+        Arazu_Object_Symbol_Destroy(context, symbol);
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Symbol_Destroy(context, symbol);
+
+    if (Arazu_Object_Symbol_Create(symbol, context, 5, stringPool.intern(&stringPool, "test_function.local_symbol"), stringPool.intern(&stringPool, ".text"), ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION, ARAZU_OBJECT_SYMBOL_VISIBILITY_LOCAL, ARAZU_TRUE, 4, 0, stringPool.intern(&stringPool, "test.asm")) != ARAZU_TRUE)
+    {
+        fputs("Failed to create symbol test_function.local_symbol in .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_Object_Section_AddSymbol(context, section, symbol) != ARAZU_TRUE)
+    {
+        fputs("Failed to add symbol test_function.local_symbol in .text\n", stderr);
+
+        Arazu_Object_Symbol_Destroy(context, symbol);
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Symbol_Destroy(context, symbol);
+
+    if (Arazu_Object_Relocation_Create(relocation, context, 0, 1, stringPool.intern(&stringPool, "number"), 4, ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE, ARAZU_FALSE, ARAZU_TRUE, ARAZU_FALSE) != ARAZU_TRUE)
+    {
+        fputs("Failed to create relocation in .text\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_Object_Section_AddRelocation(context, section, relocation) != ARAZU_TRUE)
+    {
+        fputs("Failed to add relocation in .text\n", stderr);
+
+        Arazu_Object_Relocation_Destroy(context, relocation);
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Relocation_Destroy(context, relocation);
 
     if (Arazu_Object_AddSection(context, object, section) != ARAZU_TRUE)
     {
         fputs("Failed to add .text section to object\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -179,13 +326,15 @@ int main(int argc, const char* argv[])
 
     // .data
 
-    if (Arazu_Object_Section_Create(section, context, stringPool.intern(&stringPool, ".data"), 8, ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED | ARAZU_OBJECT_SECTION_FLAGS_EXECUTABLE, ARAZU_OBJECT_SECTION_TYPE_INITIALIZED) != ARAZU_TRUE)
+    if (Arazu_Object_Section_Create(section, context, stringPool.intern(&stringPool, ".data"), 8, ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED, ARAZU_OBJECT_SECTION_TYPE_INITIALIZED) != ARAZU_TRUE)
     {
         fputs("Failed to create .data section\n", stderr);
 
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -198,9 +347,11 @@ int main(int argc, const char* argv[])
         fputs("Failed to reserve 23 bytes for .data\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -208,7 +359,23 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // Should work now
+    if (Arazu_Object_Section_ReserveSymbolCount(context, section, 2) != ARAZU_TRUE)
+    {
+        fputs("Failed to reserve 2 symbols for .data\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
     (void)Arazu_Object_Section_PushByte(context, section, 'H');
     (void)Arazu_Object_Section_PushByte(context, section, 'e');
     (void)Arazu_Object_Section_PushByte(context, section, 'l');
@@ -234,14 +401,16 @@ int main(int argc, const char* argv[])
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
 
-    if (Arazu_Object_Section_ReserveSymbolCount(context, section, 2) != ARAZU_TRUE)
+    if (Arazu_Object_Symbol_Create(symbol, context, 0, stringPool.intern(&stringPool, "msg"), stringPool.intern(&stringPool, ".data"), ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION, ARAZU_OBJECT_SYMBOL_VISIBILITY_GLOBAL, ARAZU_TRUE, 10, 0, stringPool.intern(&stringPool, "test.asm")) != ARAZU_TRUE)
     {
-        fputs("Failed to reserve 2 symbols for .data\n", stderr);
+        fputs("Failed to create symbol msg in .data\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -249,16 +418,73 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // symbols
+    if (Arazu_Object_Section_AddSymbol(context, section, symbol) != ARAZU_TRUE)
+    {
+        fputs("Failed to add symbol msg in .data\n", stderr);
+
+        Arazu_Object_Symbol_Destroy(context, symbol);
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Symbol_Destroy(context, symbol);
+
+    if (Arazu_Object_Symbol_Create(symbol, context, 15, stringPool.intern(&stringPool, "number"), stringPool.intern(&stringPool, ".data"), ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION, ARAZU_OBJECT_SYMBOL_VISIBILITY_GLOBAL, ARAZU_TRUE, 11, 0, stringPool.intern(&stringPool, "test.asm")) != ARAZU_TRUE)
+    {
+        fputs("Failed to create symbol number in .data\n", stderr);
+
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_Object_Section_AddSymbol(context, section, symbol) != ARAZU_TRUE)
+    {
+        fputs("Failed to add symbol number in .data\n", stderr);
+
+        Arazu_Object_Symbol_Destroy(context, symbol);
+        Arazu_Object_Section_Destroy(context, section);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    Arazu_Object_Symbol_Destroy(context, symbol);
 
     if (Arazu_Object_AddSection(context, object, section) != ARAZU_TRUE)
     {
         fputs("Failed to add .data section to object\n", stderr);
 
         Arazu_Object_Section_Destroy(context, section);
-        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
-
         Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
         Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
         Arazu_Context_Destroy(context);
@@ -267,11 +493,15 @@ int main(int argc, const char* argv[])
     }
     Arazu_Object_Section_Destroy(context, section);
 
-    Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
 
     // ...
 
+
     Arazu_Object_Destroy(context, object);
+
+    Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+    Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+    Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
     Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
 
     Arazu_Context_Destroy(context);
