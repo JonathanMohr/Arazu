@@ -39,7 +39,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    if (Arazu_Object_Create(object, context, stringPool.intern(&stringPool, "x86_64"), stringPool.intern(&stringPool, "systemv"), 32) != ARAZU_TRUE)
+    if (Arazu_Object_Create(object, context, ARAZU_ARCHITECTURE_X86, 32) != ARAZU_TRUE)
     {
         fputs("Failed to create object\n", stderr);
 

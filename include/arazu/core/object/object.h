@@ -10,6 +10,9 @@ extern "C" {
 #include "relocation.h"
 #include "symbol.h"
 
+typedef Arazu_u64 Arazu_Architecture;
+#define ARAZU_ARCHITECTURE_X86 ((Arazu_Architecture)0)
+
 typedef struct Arazu_Object Arazu_Object;
 
 /** Get size of object struct */
@@ -20,8 +23,7 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Create(
     Arazu_Object* out,
     const Arazu_Context* ctx,
 
-    Arazu_String architecture, // just alphanumerical (all lowercase) + '_'
-    Arazu_String abi, // just alphanumerical (all lowercase) + '_'
+    Arazu_Architecture architecture,
     Arazu_u16 bitMode
 );
 
@@ -47,10 +49,7 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_ReserveSymbolCount(const Arazu_Context*
 
 
 /** Get architecture */
-ARAZU_DETAIL_API Arazu_String Arazu_Object_GetArchitecture(const Arazu_Context* ctx, const Arazu_Object* object);
-
-/** Get abi */
-ARAZU_DETAIL_API Arazu_String Arazu_Object_GetAbi(const Arazu_Context* ctx, const Arazu_Object* object);
+ARAZU_DETAIL_API Arazu_Architecture Arazu_Object_GetArchitecture(const Arazu_Context* ctx, const Arazu_Object* object);
 
 /** Get bit mode */
 ARAZU_DETAIL_API Arazu_u16 Arazu_Object_GetBitMode(const Arazu_Context* ctx, const Arazu_Object* object);

@@ -1,5 +1,6 @@
 #include "object.h"
 
+#include "arazu/core/object/object.h"
 #include "arazu/core/object/section.h"
 #include "arazu/core/object/symbol.h"
 #include "arazu/core/types.h"
@@ -8,12 +9,6 @@
 #include "relocation.h"
 
 #include <context.h>
-
-static Arazu_Bool isValidChar(char c)
-{
-    const unsigned char uc = (unsigned char)c;
-    return (uc >= 'a' && uc <= 'z') || (uc >= '0' && uc <= '9') || uc == '_';
-}
 
 Arazu_Size Arazu_Object_Size(void)
 {
@@ -24,27 +19,11 @@ Arazu_Bool Arazu_Object_Create(
     Arazu_Object* out,
     const Arazu_Context* ctx,
 
-    Arazu_String architecture, // just alphanumerical (all lowercase) + '_'
-    Arazu_String abi, // just alphanumerical (all lowercase) + '_'
+    Arazu_Architecture architecture,
     Arazu_u16 bitMode
 )
 {
-    const char* architectureStr = ctx->stringPool.toCString(&ctx->stringPool, architecture);
-    const char* abiStr = ctx->stringPool.toCString(&ctx->stringPool, abi);
-
-    while (*architectureStr)
-    {
-        if (isValidChar(*architectureStr) != ARAZU_TRUE)
-            return ARAZU_FALSE;
-        architectureStr++;
-    }
-
-    while (*abiStr)
-    {
-        if (isValidChar(*abiStr) != ARAZU_TRUE)
-            return ARAZU_FALSE;
-        abiStr++;
-    }
+    (void)ctx;
 
     out->sectionCount = 0;
     out->symbolCount = 0;
@@ -56,7 +35,6 @@ Arazu_Bool Arazu_Object_Create(
     out->symbols = ARAZU_NULL;
 
     out->architecture = architecture;
-    out->abi = abi;
     out->bitMode = bitMode;
 
     return ARAZU_TRUE;
@@ -207,16 +185,10 @@ Arazu_Bool Arazu_Object_ReserveSymbolCount(const Arazu_Context* ctx, Arazu_Objec
 }
 
 
-Arazu_String Arazu_Object_GetArchitecture(const Arazu_Context* ctx, const Arazu_Object* object)
+Arazu_Architecture Arazu_Object_GetArchitecture(const Arazu_Context* ctx, const Arazu_Object* object)
 {
     (void)ctx;
     return object->architecture;
-}
-
-Arazu_String Arazu_Object_GetAbi(const Arazu_Context* ctx, const Arazu_Object* object)
-{
-    (void)ctx;
-    return object->abi;
 }
 
 Arazu_u16 Arazu_Object_GetBitMode(const Arazu_Context* ctx, const Arazu_Object* object)

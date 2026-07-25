@@ -18,8 +18,7 @@ struct Arazu_Object
     Arazu_Object_Section* sections;
     Arazu_Object_Symbol* symbols; // absolute and undefined symbols
 
-    Arazu_String architecture; // just alphanumerical (all lowercase) + '_'
-    Arazu_String abi; // just alphanumerical (all lowercase) + '_'
+    Arazu_Architecture architecture;
     Arazu_u16 bitMode;
 };
 
