@@ -11,7 +11,7 @@ extern "C" {
 #include "symbol.h"
 
 typedef Arazu_u64 Arazu_Architecture;
-#define ARAZU_ARCHITECTURE_X86 ((Arazu_Architecture)0)
+#define ARAZU_ARCHITECTURE_X86 ((Arazu_Architecture)1)
 
 typedef struct Arazu_Object Arazu_Object;
 
