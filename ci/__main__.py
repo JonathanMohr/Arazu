@@ -1,4 +1,4 @@
-from ci.defs import OS, ARCH, OPTIMIZATION, PORTABILITY, LINKING, HOST, BuildContext, BuildMode
+from ci.defs import OS, ARCH, OPTIMIZATION, PORTABILITY, LINKING, HOST, BuildContext, BuildMode, DynamicLibrary, StaticLibrary, Library
 
 from ci.toolchains.toolchain import Toolchain
 from ci.toolchains.get import Get_LLVM_Toolchain
@@ -68,11 +68,7 @@ def Build_Dynamic_Library(logger: logging.Logger, toolchain: Toolchain, mode: Bu
 # uses: target_os, target_arch, werror, portability, linking, assertions, sanitizers, host, sysroot
 # kind of: optimization, uses it for release and release_with_debug_info, sets it for debug
 # sets: lto, pic, hidden, debuginfo
-def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, dll_libraries: list[Path], src_dir: Path, build_dir: Path, name: str) -> tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]:
-
-    dynamic_libs: list[tuple[Path, Path | None, Path | None]] = []
-    static_libs: list[Path] = []
-
+def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, dll_libraries: list[Path], src_dir: Path, build_dir: Path, name: str) -> Library:
     # Release
 
     r_name = f"{name}"
@@ -94,9 +90,6 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     r_dynamic_lib, r_import_lib, r_debug_info = Build_Dynamic_Library(logger, toolchain, r_mode, dll_libraries, src_dir, r_build_dir / "dynamic", r_name, False)
     r_static_lib = Build_Static_Library(logger, toolchain, sr_mode, src_dir, r_build_dir / "static", sr_name, False)
 
-    dynamic_libs.append((r_dynamic_lib, r_import_lib, r_debug_info))
-    static_libs.append(r_static_lib)
-
     # Release with debug info
 
     rd_name = f"{name}rd"
@@ -117,9 +110,6 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
 
     rd_dynamic_lib, rd_import_lib, rd_debug_info = Build_Dynamic_Library(logger, toolchain, rd_mode, dll_libraries, src_dir, rd_build_dir / "dynamic", rd_name, False)
     rd_static_lib = Build_Static_Library(logger, toolchain, srd_mode, src_dir, rd_build_dir / "static", srd_name, False)
-
-    dynamic_libs.append((rd_dynamic_lib, rd_import_lib, rd_debug_info))
-    static_libs.append(rd_static_lib)
 
     # Debug
 
@@ -144,31 +134,19 @@ def Build_Dist_Library(logger: logging.Logger, toolchain: Toolchain, mode: Build
     d_dynamic_lib, d_import_lib, d_debug_info = Build_Dynamic_Library(logger, toolchain, d_mode, dll_libraries, src_dir, d_build_dir / "dynamic", d_name, True)
     d_static_lib = Build_Static_Library(logger, toolchain, sd_mode, src_dir, d_build_dir / "static", sd_name, False)
 
-    dynamic_libs.append((d_dynamic_lib, d_import_lib, d_debug_info))
-    static_libs.append(d_static_lib)
+    dynamicLibrary = DynamicLibrary((r_dynamic_lib, r_import_lib, r_debug_info), (d_dynamic_lib, d_import_lib, d_debug_info), (rd_dynamic_lib, rd_import_lib, rd_debug_info))
+    staticLibrary = StaticLibrary(r_static_lib, d_static_lib, rd_static_lib)
 
-    return dynamic_libs, static_libs
+    return Library(dynamicLibrary, staticLibrary)
 
 
-def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, static_libs: list[Path], libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]], src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
+def Build_Executable(logger: logging.Logger, toolchain: Toolchain, mode: BuildMode, static_libs: list[Path], src_dir: Path, build_dir: Path, name: str) -> tuple[Path, Path | None]:
     objects = Build_Sources_To_Objects(logger, toolchain, mode, src_dir, build_dir, True)
     
     libs: list[Path] = []
 
     for static_lib in static_libs:
         libs.append(static_lib)
-
-    for library in libraries:
-        dynamic_libraries, static_libraries = library
-
-        if mode.linking == LINKING.DYNAMIC:
-            for dynamic_library in dynamic_libraries:
-                dylib, implib, debug_info = dynamic_library
-                if implib: libs.append(implib)
-                else: libs.append(dylib)
-        else:
-            for static_library in static_libraries:
-                libs.append(static_library)
 
     try:
         executable, executable_debug_info = toolchain.Link_Executable(mode, objects, libs, name, build_dir)
@@ -224,7 +202,7 @@ def StageOther(logger: logging.Logger, dist_dir: Path):
     dist_doc_readme = dist_doc / "README.md"
     Copy_Path(logger, readme, dist_doc_readme)
 
-def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[tuple[list[tuple[Path, Path | None, Path | None]], list[Path]]]) -> tuple[Path, Path]:
+def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[Library]) -> tuple[Path, Path]:
     license_path = Path("LICENSE")
     license = dist_dir / "LICENSE"
 
@@ -242,9 +220,14 @@ def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, l
 
     # Libraries
     for library in libraries:
-        dynamic_libraries, static_libraries = library
+        dynamic_lib = library.GetDynamic()
+        static_lib = library.GetStatic()
 
-        for dynamic_library in dynamic_libraries:
+        for dynamic_library in [
+            (dynamic_lib.GetRelease(), dynamic_lib.GetReleaseImp(), dynamic_lib.GetReleaseInfo()),
+            (dynamic_lib.GetDebug(), dynamic_lib.GetDebugImp(), dynamic_lib.GetDebugInfo()),
+            (dynamic_lib.GetReleaseWithDebugInfo(), dynamic_lib.GetReleaseWithDebugInfoImp(), dynamic_lib.GetReleaseWithDebugInfoInfo())
+        ]:
             dylib, implib, debug_info = dynamic_library
 
             dst_dylib = lib_dir / dylib.name
@@ -258,7 +241,7 @@ def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, l
                 dst_debug_info = lib_dir / debug_info.name
                 Copy_Path(logger, debug_info, dst_debug_info)
 
-        for static_library in static_libraries:
+        for static_library in [static_lib.GetRelease(), static_lib.GetDebug(), static_lib.GetReleaseWithDebugInfo()]:
             dst_static_library = lib_dir / static_library.name
             Copy_Path(logger, static_library, dst_static_library)
 
@@ -478,7 +461,6 @@ def main() -> bool:
             coreBuildMode = copy.copy(buildMode)
             
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
-            coreDyn, coreS = coreLibrary
             
             dist_include_dir, dist_lib_dir = StageLibraries(logger, dist_dir, include_dir, [coreLibrary])
 
@@ -486,12 +468,12 @@ def main() -> bool:
             arasmToolchain = copy.copy(toolchain)
             arasmToolchain.Add_Include_Directory(tools_dir / "arasm")
             arasmToolchain.Add_Library_Directory(dist_lib_dir)
-            arasmToolchain.Add_Library("arazus", coreS[0]) # HACK: Extremely ugly
+            arasmToolchain.Add_Library("arazus", coreLibrary.GetStatic().GetRelease())
 
             arasmBuildMode = copy.copy(buildMode)
             arasmBuildMode.host = HOST.HOSTED
 
-            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [], [], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
+            arasmExecutable = Build_Executable(logger, arasmToolchain, arasmBuildMode, [], tools_dir / "arasm", build_dir / "tools" / "arasm", "arasm")
             
 
             StageExecutables(logger, dist_dir, [arasmExecutable])
