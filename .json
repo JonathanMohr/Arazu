@@ -1,0 +1,9 @@
+{
+    "abc": [
+        "C:\\Users\\Jonathan\\scoop\\apps\\llvm\\current\\bin\\clang++.EXE",
+        "build\\dist_build\\windows\\x86_64\\speed\\portable\\dynamic\\libs\\elf\\arazuelf\\dynamic\\elf.c.o",
+        "-Ldist\\lib",
+        "build\\dist_build\\windows\\x86_64\\speed\\portable\\dynamic\\os\\windows\\windows_dll.lib",
+        "-l("arazus", WindowsPath("build/dist_build/windows/x86_64/speed/portable/dynamic/libs/core/arazu/static/arazus.lib"))\", "-fuse-ld=lld", "-fdebug-prefix-map=C:\\Users\\Jonathan\\Desktop\\Dev\\Arazu=project_root", "-flto=full", "-O3", "-funroll-loops", "-Wl,/OPT:REF", "-Wl,/OPT:ICF", "-march=x86-64", "-mtune=generic", "-fomit-frame-pointer", "-Wl,/DEBUG:NONE", "-nostdlib", "-nostartfiles", "--target=x86_64-pc-windows-msvc", "-Wl,/DLL", "-Wl,/IMPLIB:build\\dist_build\\windows\\x86_64\\speed\\portable\\dynamic\\libs\\elf\\arazuelf\\dynamic\\arazuelf.lib", "-o", "build\\dist_build\\windows\\x86_64\\speed\\portable\\dynamic\\libs\\elf\\arazuelf\\dynamic\\arazuelf.dll"
+    ]
+}

@@ -202,18 +202,12 @@ def StageOther(logger: logging.Logger, dist_dir: Path):
     dist_doc_readme = dist_doc / "README.md"
     Copy_Path(logger, readme, dist_doc_readme)
 
-def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[Library]) -> tuple[Path, Path]:
-    license_path = Path("LICENSE")
-    license = dist_dir / "LICENSE"
-
+def StageLibrariesPrepare(logger: logging.Logger, dist_dir: Path, include_path: Path, libraries: list[Library]) -> tuple[Path, Path]:
     include_dir = dist_dir / "include"
     lib_dir = dist_dir / "lib"
 
     include_dir.mkdir(parents=True, exist_ok=True)
     lib_dir.mkdir(parents=True, exist_ok=True)
-
-    # License
-    Copy_Path(logger, license_path, license)
 
     # Include directory
     Copy_Path(logger, include_path, include_dir)
@@ -246,6 +240,33 @@ def StageLibraries(logger: logging.Logger, dist_dir: Path, include_path: Path, l
             Copy_Path(logger, static_library, dst_static_library)
 
     return (include_dir, lib_dir)
+
+def AddLibrary(logger: logging.Logger, lib_dir: Path, libraries: list[Library]):
+    for library in libraries:
+            dynamic_lib = library.GetDynamic()
+            static_lib = library.GetStatic()
+    
+            for dynamic_library in [
+                (dynamic_lib.GetRelease(), dynamic_lib.GetReleaseImp(), dynamic_lib.GetReleaseInfo()),
+                (dynamic_lib.GetDebug(), dynamic_lib.GetDebugImp(), dynamic_lib.GetDebugInfo()),
+                (dynamic_lib.GetReleaseWithDebugInfo(), dynamic_lib.GetReleaseWithDebugInfoImp(), dynamic_lib.GetReleaseWithDebugInfoInfo())
+            ]:
+                dylib, implib, debug_info = dynamic_library
+    
+                dst_dylib = lib_dir / dylib.name
+                Copy_Path(logger, dylib, dst_dylib)
+    
+                if implib is not None:
+                    dst_implib = lib_dir / implib.name
+                    Copy_Path(logger, implib, dst_implib)
+    
+                if debug_info is not None:
+                    dst_debug_info = lib_dir / debug_info.name
+                    Copy_Path(logger, debug_info, dst_debug_info)
+    
+            for static_library in [static_lib.GetRelease(), static_lib.GetDebug(), static_lib.GetReleaseWithDebugInfo()]:
+                dst_static_library = lib_dir / static_library.name
+                Copy_Path(logger, static_library, dst_static_library)
 
 def StageExecutables(logger: logging.Logger, dist_dir: Path, executables: list[tuple[Path, Path | None]]):
     bin_dir = dist_dir / "bin"
@@ -459,16 +480,28 @@ def main() -> bool:
             coreToolchain.Add_Include_Directory(lib_dir / "core")
 
             coreBuildMode = copy.copy(buildMode)
-            
+
             coreLibrary = Build_Dist_Library(logger, coreToolchain, coreBuildMode, dll_libraries, lib_dir / "core", build_dir / "libs" / "core", "arazu")
-            
-            dist_include_dir, dist_lib_dir = StageLibraries(logger, dist_dir, include_dir, [coreLibrary])
+
+            dist_include_dir, dist_lib_dir = StageLibrariesPrepare(logger, dist_dir, include_dir, [coreLibrary])
+
+            elfToolchain = copy.copy(toolchain)
+            elfToolchain.Add_Include_Directory(lib_dir / "elf")
+            elfToolchain.Add_Library_Directory(dist_lib_dir)
+            elfToolchain.Add_Library("arazus", coreLibrary.GetStatic().GetRelease())
+
+            elfBuildMode = copy.copy(buildMode)
+
+            elfLibrary = Build_Dist_Library(logger, elfToolchain, elfBuildMode, dll_libraries, lib_dir / "elf", build_dir / "libs" / "elf", "arazuelf")
+
+            AddLibrary(logger, dist_lib_dir, [elfLibrary])
 
 
             arasmToolchain = copy.copy(toolchain)
             arasmToolchain.Add_Include_Directory(tools_dir / "arasm")
             arasmToolchain.Add_Library_Directory(dist_lib_dir)
             arasmToolchain.Add_Library("arazus", coreLibrary.GetStatic().GetRelease())
+            arasmToolchain.Add_Library("arazuelfs", elfLibrary.GetStatic().GetRelease())
 
             arasmBuildMode = copy.copy(buildMode)
             arasmBuildMode.host = HOST.HOSTED
