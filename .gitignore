@@ -21,3 +21,5 @@ __pycache__/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+output_arasm.o

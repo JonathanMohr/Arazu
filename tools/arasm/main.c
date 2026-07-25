@@ -3,11 +3,56 @@
 #include <arazu/core/context.h>
 #include <arazu/core/object/object.h>
 
+#include <arazu/elf/writer.h>
+
 #include "allocator.h"
 #include "string_pool.h"
 
+static Arazu_Bool ELFFileWriter_Write(Arazu_ELF_FileWriter* writer, const Arazu_u8* data, Arazu_Size size)
+{
+    FILE* file = (FILE*)writer->userdata;
+
+    if (size > SIZE_MAX) // TODO
+        return ARAZU_FALSE;
+    
+    size_t s = (size_t)size;
+
+    if (fwrite(data, s, 1, file) != 1)
+        return ARAZU_FALSE;
+
+    return ARAZU_TRUE;
+}
+
+static Arazu_Bool createELFFileWriter(Arazu_ELF_FileWriter* out, const char* filename)
+{
+#ifdef _WIN32
+    FILE* file;
+    errno_t fileErr = fopen_s(&file, filename, "wb");
+    if (fileErr != 0)
+#else
+    FILE* file = fopen(filename, "wb");
+    if (!file)
+#endif
+    {
+        return ARAZU_FALSE;
+    }
+
+    out->userdata = file;
+    out->write = ELFFileWriter_Write;
+
+    return ARAZU_TRUE;
+}
+
+static void destroyElfFileWriter(Arazu_ELF_FileWriter* writer)
+{
+    FILE* file = (FILE*)writer->userdata;
+    fclose(file);
+}
+
 int main(int argc, const char* argv[])
 {
+    const char* filename = "output_arasm.o";
+
     (void)argc;
     (void)argv;
 
@@ -494,7 +539,41 @@ int main(int argc, const char* argv[])
     Arazu_Object_Section_Destroy(context, section);
 
 
-    // ...
+    Arazu_ELF_FileWriter fileWriter;
+    if (createELFFileWriter(&fileWriter, filename) != ARAZU_TRUE)
+    {
+        fprintf(stderr, "Failed to open file %s\n", filename);
+
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    if (Arazu_ELF_WriteObject(object, &fileWriter) != ARAZU_TRUE)
+    {
+        fputs("Failed to write ELF file\n", stderr);
+
+        destroyElfFileWriter(&fileWriter);
+        Arazu_Object_Destroy(context, object);
+
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), relocation);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), symbol);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), section);
+        Arazu_Context_GetAllocator(context)->free(Arazu_Context_GetAllocator(context), object);
+
+        Arazu_Context_Destroy(context);
+        stringPool.destroy(&stringPool);
+        return 1;
+    }
+
+    destroyElfFileWriter(&fileWriter);
 
 
     Arazu_Object_Destroy(context, object);
@@ -507,7 +586,7 @@ int main(int argc, const char* argv[])
     Arazu_Context_Destroy(context);
     stringPool.destroy(&stringPool);
 
-    printf("This is just a placeholder. Do not try to this. This will may create a output_arasm.o to test the library\n");
+    printf("This is just a placeholder. Do not try to this. This will may create a %s to test the library\n", filename);
 
     return 0;
 }
