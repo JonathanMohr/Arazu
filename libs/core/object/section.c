@@ -206,7 +206,7 @@ Arazu_Bool Arazu_Object_Section_ReserveBufferSize(const Arazu_Context* ctx, Araz
     ctx->allocator.free(&ctx->allocator, section->buffer);
     section->buffer = newBuffer;
 
-    section->bufferCapacity = size * sizeof(Arazu_u8);
+    section->bufferCapacity = size;
 
     return ARAZU_TRUE;
 }
@@ -226,7 +226,7 @@ Arazu_Bool Arazu_Object_Section_ReserveRelocationCount(const Arazu_Context* ctx,
     ctx->allocator.free(&ctx->allocator, section->relocations);
     section->relocations = newRelocations;
 
-    section->relocationCapacity = count * sizeof(Arazu_Object_Relocation);
+    section->relocationCapacity = count;
 
     return ARAZU_TRUE;
 }
@@ -246,7 +246,7 @@ Arazu_Bool Arazu_Object_Section_ReserveSymbolCount(const Arazu_Context* ctx, Ara
     ctx->allocator.free(&ctx->allocator, section->symbols);
     section->symbols = newSymbols;
 
-    section->symbolCapacity = count * sizeof(Arazu_Object_Symbol);
+    section->symbolCapacity = count;
 
     return ARAZU_TRUE;
 }
