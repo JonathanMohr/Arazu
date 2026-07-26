@@ -159,7 +159,7 @@ Arazu_Bool Arazu_Object_ReserveSectionCount(const Arazu_Context* ctx, Arazu_Obje
     ctx->allocator.free(&ctx->allocator, object->sections);
     object->sections = newSections;
 
-    object->sectionCapacity = count * sizeof(Arazu_Object_Section);
+    object->sectionCapacity = count;
 
     return ARAZU_TRUE;
 }
@@ -179,7 +179,7 @@ Arazu_Bool Arazu_Object_ReserveSymbolCount(const Arazu_Context* ctx, Arazu_Objec
     ctx->allocator.free(&ctx->allocator, object->symbols);
     object->symbols = newSymbols;
 
-    object->symbolCapacity = count * sizeof(Arazu_Object_Symbol);
+    object->symbolCapacity = count;
 
     return ARAZU_TRUE;
 }
