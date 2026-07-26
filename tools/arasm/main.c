@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #include <arazu/core/context.h>
 #include <arazu/core/object/object.h>
