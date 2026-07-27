@@ -557,7 +557,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    if (Arazu_ELF_WriteObject(object, &fileWriter) != ARAZU_TRUE)
+    if (Arazu_ELF_WriteObject(context, object, &fileWriter) != ARAZU_TRUE)
     {
         fputs("Failed to write ELF file\n", stderr);
 
