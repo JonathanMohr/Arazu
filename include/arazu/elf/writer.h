@@ -1,6 +1,10 @@
 #ifndef ARAZU_ELF_WRITER_H
 #define ARAZU_ELF_WRITER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <arazu/core/types.h>
 #include <arazu/core/object/object.h>
 
@@ -14,5 +18,9 @@ typedef struct Arazu_ELF_FileWriter
 
 /** Write an object to an ELF file */
 ARAZU_DETAIL_API Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

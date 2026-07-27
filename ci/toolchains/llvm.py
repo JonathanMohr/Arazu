@@ -133,7 +133,7 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
         ])
     else:
         flags.extend([
-
+            "-fno-stack-protector"
         ])
 
     # Debug information
