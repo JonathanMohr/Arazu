@@ -177,16 +177,24 @@ def StageOther(logger: logging.Logger, dist_dir: Path):
 
     readme = project_root / "README.md"
     license = project_root / "LICENSE"
+    notice = project_root / "NOTICE"
 
     dist_license = dist_dir / "LICENSE"
+    dist_notice = dist_dir / "NOTICE"
 
     dist_share = dist_dir / "share"
 
     dist_doc = dist_share / "doc" / "arazu"
 
-    # License
+    # .
+
+    ## License
     dist_license.parent.mkdir(parents=True, exist_ok=True)
     Copy_Path(logger, license, dist_license)
+
+    ## Notice
+    dist_notice.parent.mkdir(parents=True, exist_ok=True)
+    Copy_Path(logger, notice, dist_notice)
 
     # share/
     dist_share.mkdir(parents=True, exist_ok=True)
@@ -197,6 +205,10 @@ def StageOther(logger: logging.Logger, dist_dir: Path):
     ### LICENSE
     dist_doc_license = dist_doc / "LICENSE"
     Copy_Path(logger, license, dist_doc_license)
+
+    ### NOTICE
+    dist_doc_notice = dist_doc / "NOTICE"
+    Copy_Path(logger, notice, dist_doc_notice)
 
     ### README.md
     dist_doc_readme = dist_doc / "README.md"
