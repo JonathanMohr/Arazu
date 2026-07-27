@@ -12,6 +12,7 @@ typedef struct Arazu_ELF_FileWriter
     void* userdata;
 } Arazu_ELF_FileWriter;
 
-Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter);
+/** Write an object to an ELF file */
+ARAZU_DETAIL_API Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter);
 
 #endif
