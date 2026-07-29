@@ -173,7 +173,7 @@ typedef Arazu_u64 Arazu_uValue;
     #endif
 #endif
 
-// TODO: Could be different for some targets
+/* TODO: Could be different for some targets */
 typedef Arazu_PointerSize Arazu_Support_size_t;
 
 

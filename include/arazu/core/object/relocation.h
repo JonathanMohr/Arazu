@@ -24,12 +24,12 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Relocation_Create(
 
     Arazu_String symbol,
 
-    Arazu_u16 size, // 8, 16, 24, 32, 64, ...
+    Arazu_u16 size, /* 8, 16, 24, 32, 64, ... */
     Arazu_Object_Relocation_Type type,
     Arazu_Bool isSigned,
 
     Arazu_Bool littleEndian,
-    Arazu_Bool isSection // is symbol a section
+    Arazu_Bool isSection /* is symbol a section */
 );
 
 /** Free resources of relocation that was created in-place */

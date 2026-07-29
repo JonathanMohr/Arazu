@@ -11,9 +11,9 @@ struct Arazu_Object_Symbol
 {
     Arazu_uValue value;
 
-    // Only used when hasDebugInformation is ARAZU_TRUE
-    Arazu_u64 line; // 0-based
-    Arazu_u64 column; // 0-based
+    /* Only used when hasDebugInformation is ARAZU_TRUE */
+    Arazu_u64 line; /* 0-based */
+    Arazu_u64 column; /* 0-based */
     Arazu_String file;
 
     Arazu_String name;

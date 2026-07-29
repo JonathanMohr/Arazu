@@ -1,6 +1,6 @@
 #include <arazu/core/types.h>
 
-// NOLINTNEXTLINE(misc-use-internal-linkage)
+/* NOLINTNEXTLINE(misc-use-internal-linkage) */
 ARAZU_DETAIL_WEAK_FUNCTION(void*, memcpy, (void* dst, const void* src, Arazu_Support_size_t n),
 {
     Arazu_u8* d = dst;
@@ -10,7 +10,7 @@ ARAZU_DETAIL_WEAK_FUNCTION(void*, memcpy, (void* dst, const void* src, Arazu_Sup
     return dst;
 })
 
-// NOLINTNEXTLINE(misc-use-internal-linkage)
+/* NOLINTNEXTLINE(misc-use-internal-linkage) */
 ARAZU_DETAIL_WEAK_FUNCTION(void*, memset, (void* ptr, int val, Arazu_Support_size_t n),
 {
     Arazu_u8* d = ptr;

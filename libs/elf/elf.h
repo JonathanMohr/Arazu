@@ -46,13 +46,13 @@ Elf64_Ssize     = Arazu_i64
         Arazu_u16 machine;
         Arazu_u32 version;
         
-        // 0 if none
+        # 0 if none
         Arazu_u32 (32-bit) / Arazu_u64 (64-bit) entry;
 
-        // 0 if none
+        # 0 if none
         Arazu_u32 (32-bit) / Arazu_u64 (64-bit) programHeaderTableOffset;
         
-        // 0 if none
+        # 0 if none
         Arazu_u32 (32-bit) / Arazu_u64 (64-bit) sectionHeaderTableOffset;
 
         Arazu_u32 flags;
@@ -62,18 +62,18 @@ Elf64_Ssize     = Arazu_i64
         Arazu_u16 programHeaderCount;
         Arazu_u16 sectionHeaderSize;
 
-        // if greater than or egual to 0xFF00, it has the value 0
-        // The actual index is in the size field of the section header at index 0
+        # if greater than or egual to 0xFF00, it has the value 0
+        # The actual index is in the size field of the section header at index 0
         Arazu_u16 sectionHeaderCount;
 
-        // if greater than or egual to 0xFF00, it has the value 0xFFFF
-        // The actual index is in the link field of the section header at index 0
+        # if greater than or egual to 0xFF00, it has the value 0xFFFF
+        # The actual index is in the link field of the section header at index 0
         Arazu_u16 sectionNameStringTableIndex;
 */
 
 #define ELF_HEADER_SIZE 64
 
-// ident
+/* ident */
 #define ELF_HEADER_IDENT_MAGIC_0 ((Arazu_u8)0x7F)
 #define ELF_HEADER_IDENT_MAGIC_1 ((Arazu_u8)'E')
 #define ELF_HEADER_IDENT_MAGIC_2 ((Arazu_u8)'L')
@@ -105,23 +105,23 @@ Elf64_Ssize     = Arazu_i64
 
 #define ELF_HEADER_IDENT_ABIVERSION_UNSPECIFIED ((Arazu_u8)0)
 
-// type
+/* type */
 #define ELF_HEADER_TYPE_NONE        ((Arazu_u16)0)
 #define ELF_HEADER_TYPE_RELOCATABLE ((Arazu_u16)1)
 #define ELF_HEADER_TYPE_EXECUTABLE  ((Arazu_u16)2)
 #define ELF_HEADER_TYPE_DYNAMIC     ((Arazu_u16)3)
 #define ELF_HEADER_TYPE_CORE        ((Arazu_u16)4)
 
-// machine
+/* machine */
 #define ELF_HEADER_MACHINE_NONE   ((Arazu_u16)0)
-// TODO: Add values
-#define ELF_HEADER_MACHINE_386    ((Arazu_u16)3)   // Intel 80386
-#define ELF_HEADER_MACHINE_860    ((Arazu_u16)7)   // Intel 80860
-#define ELF_HEADER_MACHINE_960    ((Arazu_u16)19)  // Intel 80960
-#define ELF_HEADER_MACHINE_IA_64  ((Arazu_u16)50)  // Intel IA-64
-#define ELF_HEADER_MACHINE_X86_64 ((Arazu_u16)62)  // AMD x86-64
+/* TODO: Add values */
+#define ELF_HEADER_MACHINE_386    ((Arazu_u16)3)   /* Intel 80386 */
+#define ELF_HEADER_MACHINE_860    ((Arazu_u16)7)   /* Intel 80860 */
+#define ELF_HEADER_MACHINE_960    ((Arazu_u16)19)  /* Intel 80960 */
+#define ELF_HEADER_MACHINE_IA_64  ((Arazu_u16)50)  /* Intel IA-64 */
+#define ELF_HEADER_MACHINE_X86_64 ((Arazu_u16)62)  /* AMD x86-64 */
 
-// version
+/* version */
 #define ELF_HEADER_VERSION_NONE    ((Arazu_u32)0)
 #define ELF_HEADER_VERSION_CURRENT ((Arazu_u32)1)
 

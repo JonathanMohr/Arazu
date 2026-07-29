@@ -34,9 +34,9 @@ ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Symbol_Create(
     Arazu_Object_Symbol_Visibility visibility,
 
     Arazu_Bool hasDebugInformation,
-    // Only used when hasDebugInformation is ARAZU_TRUE
-    Arazu_u64 line, // 0-based
-    Arazu_u64 column, // 0-based
+    /* Only used when hasDebugInformation is ARAZU_TRUE */
+    Arazu_u64 line, /* 0-based */
+    Arazu_u64 column, /* 0-based */
     Arazu_String file
 );
 

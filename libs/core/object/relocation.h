@@ -18,8 +18,8 @@ struct Arazu_Object_Relocation
     Arazu_Object_Relocation_Type type;
     Arazu_Bool isSigned;
 
-    Arazu_Bool littleEndian; // false -> big endian
-    Arazu_Bool isSection; // if symbol is a section
+    Arazu_Bool littleEndian; /* false -> big endian */
+    Arazu_Bool isSection; /* if symbol is a section */
 };
 
 #ifdef __cplusplus

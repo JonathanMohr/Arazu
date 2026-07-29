@@ -16,7 +16,7 @@ struct Arazu_Object
     Arazu_Size symbolCapacity;
 
     Arazu_Object_Section* sections;
-    Arazu_Object_Symbol* symbols; // absolute and undefined symbols
+    Arazu_Object_Symbol* symbols; /* absolute and undefined symbols */
 
     Arazu_Architecture architecture;
     Arazu_u16 bitMode;

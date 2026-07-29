@@ -24,7 +24,7 @@ struct Arazu_Object_Section
     Arazu_u8* buffer;
 
     Arazu_Object_Relocation* relocations;
-    Arazu_Object_Symbol* symbols; // symbols in this section
+    Arazu_Object_Symbol* symbols; /* symbols in this section */
 
     Arazu_String name;
 
