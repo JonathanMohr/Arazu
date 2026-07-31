@@ -87,11 +87,18 @@ ARAZU_DETAIL_API Arazu_uValue Arazu_Object_Section_GetRelocationCount(const Araz
 /** Get relocations */
 ARAZU_DETAIL_API const Arazu_Object_Relocation* Arazu_Object_Section_GetRelocations(const Arazu_Context* ctx, const Arazu_Object_Section* section);
 
+/** Get relocation by index, returns ARAZU_NULL when out of range */
+ARAZU_DETAIL_API const Arazu_Object_Relocation* Arazu_Object_Section_GetRelocation(const Arazu_Context* ctx, const Arazu_Object_Section* section, Arazu_uValue index);
+
 /** Get symbol count */
 ARAZU_DETAIL_API Arazu_uValue Arazu_Object_Section_GetSymbolCount(const Arazu_Context* ctx, const Arazu_Object_Section* section);
 
 /** Get symbols */
 ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_Section_GetSymbols(const Arazu_Context* ctx, const Arazu_Object_Section* section);
+
+/** Get symbol by index, returns ARAZU_NULL when out of range */
+ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_Section_GetSymbol(const Arazu_Context* ctx, const Arazu_Object_Section* section, Arazu_uValue index);
+
 
 #ifdef __cplusplus
 }

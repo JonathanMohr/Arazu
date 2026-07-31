@@ -1,6 +1,7 @@
 #ifndef ARAZU_CORE_OBJECT_OBJECT_H
 #define ARAZU_CORE_OBJECT_OBJECT_H
 
+#include "arazu/core/object/symbol.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,11 +62,17 @@ ARAZU_DETAIL_API Arazu_uValue Arazu_Object_GetSectionCount(const Arazu_Context* 
 /** Get sections */
 ARAZU_DETAIL_API const Arazu_Object_Section* Arazu_Object_GetSections(const Arazu_Context* ctx, const Arazu_Object* object);
 
+/** Get section by index, returns ARAZU_NULL when out of range */
+ARAZU_DETAIL_API const Arazu_Object_Section* Arazu_Object_GetSection(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index);
+
 /** Get symbol count */
 ARAZU_DETAIL_API Arazu_uValue Arazu_Object_GetSymbolCount(const Arazu_Context* ctx, const Arazu_Object* object);
 
 /** Get symbols */
 ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_GetSymbols(const Arazu_Context* ctx, const Arazu_Object* object);
+
+/** Get symbol by index, returns ARAZU_NULL when out of range */
+ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_GetSymbol(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index);
 
 #ifdef __cplusplus
 }

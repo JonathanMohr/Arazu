@@ -210,6 +210,13 @@ const Arazu_Object_Section* Arazu_Object_GetSections(const Arazu_Context* ctx, c
     return object->sections;
 }
 
+const Arazu_Object_Section* Arazu_Object_GetSection(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index)
+{
+    (void)ctx;
+    if (index >= object->sectionCount) return ARAZU_NULL;
+    return &object->sections[index];
+}
+
 Arazu_uValue Arazu_Object_GetSymbolCount(const Arazu_Context* ctx, const Arazu_Object* object)
 {
     (void)ctx;
@@ -220,4 +227,11 @@ const Arazu_Object_Symbol* Arazu_Object_GetSymbols(const Arazu_Context* ctx, con
 {
     (void)ctx;
     return object->symbols;
+}
+
+const Arazu_Object_Symbol* Arazu_Object_GetSymbol(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index)
+{
+    (void)ctx;
+    if (index >= object->symbolCount) return ARAZU_NULL;
+    return &object->symbols[index];
 }

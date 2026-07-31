@@ -301,6 +301,13 @@ const Arazu_Object_Relocation* Arazu_Object_Section_GetRelocations(const Arazu_C
     return section->relocations;
 }
 
+const Arazu_Object_Relocation* Arazu_Object_Section_GetRelocation(const Arazu_Context* ctx, const Arazu_Object_Section* section, Arazu_uValue index)
+{
+    (void)ctx;
+    if (index >= section->relocationCount) return ARAZU_NULL;
+    return &section->relocations[index];
+}
+
 Arazu_uValue Arazu_Object_Section_GetSymbolCount(const Arazu_Context* ctx, const Arazu_Object_Section* section)
 {
     (void)ctx;
@@ -311,4 +318,11 @@ const Arazu_Object_Symbol* Arazu_Object_Section_GetSymbols(const Arazu_Context* 
 {
     (void)ctx;
     return section->symbols;
+}
+
+const Arazu_Object_Symbol* Arazu_Object_Section_GetSymbol(const Arazu_Context* ctx, const Arazu_Object_Section* section, Arazu_uValue index)
+{
+    (void)ctx;
+    if (index >= section->symbolCount) return ARAZU_NULL;
+    return &section->symbols[index];
 }
