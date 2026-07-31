@@ -69,6 +69,25 @@ Elf64_Ssize     = Arazu_i64
         # if greater than or egual to 0xFF00, it has the value 0xFFFF
         # The actual index is in the link field of the section header at index 0
         Arazu_u16 sectionNameStringTableIndex;
+
+    Section header:
+        # index in section header string table
+        Arazu_u32 name;
+
+        Arazu_u32 type;
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) flags;
+
+        # address of section's first byte if loaded into memory of a process, 0 if not
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) address;
+
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) offset;
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) size;
+
+        Arazu_u32 link;
+        Arazu_u32 info;
+
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) alignment;
+        Arazu_u32 (32-bit) / Arazu_u64 (64-bit) entrySize;
 */
 
 #define ELF_HEADER_SIZE 64
@@ -128,6 +147,76 @@ Elf64_Ssize     = Arazu_i64
 #define ELF_HEADER_VERSION_NONE    ((Arazu_u32)0)
 #define ELF_HEADER_VERSION_CURRENT ((Arazu_u32)1)
 
+
+
+#define ELF_SECTIONHEADER_SIZE_64 64
+#define ELF_SECTIONHEADER_SIZE_32 40
+
+/* type */
+#define ELF_SECTIONHEADER_TYPE_NULL          ((Arazu_u32)0)
+
+#define ELF_SECTIONHEADER_TYPE_PROGBITS      ((Arazu_u32)1)
+#define ELF_SECTIONHEADER_TYPE_NOBITS        ((Arazu_u32)8)
+
+#define ELF_SECTIONHEADER_TYPE_SYMTAB        ((Arazu_u32)2)
+#define ELF_SECTIONHEADER_TYPE_DYNSYM        ((Arazu_u32)11)
+#define ELF_SECTIONHEADER_TYPE_SYMTAB_SHNDX  ((Arazu_u32)18)
+
+#define ELF_SECTIONHEADER_TYPE_STRTAB        ((Arazu_u32)3)
+
+#define ELF_SECTIONHEADER_TYPE_RELA          ((Arazu_u32)4)
+#define ELF_SECTIONHEADER_TYPE_REL           ((Arazu_u32)9)
+
+#define ELF_SECTIONHEADER_TYPE_NOTE          ((Arazu_u32)7)
+#define ELF_SECTIONHEADER_TYPE_DYNAMIC       ((Arazu_u32)6)
+
+#define ELF_SECTIONHEADER_TYPE_HASH          ((Arazu_u32)5)
+
+#define ELF_SECTIONHEADER_TYPE_INIT_ARRAY    ((Arazu_u32)14)
+#define ELF_SECTIONHEADER_TYPE_FINI_ARRAY    ((Arazu_u32)15)
+#define ELF_SECTIONHEADER_TYPE_PREINIT_ARRAY ((Arazu_u32)16)
+
+#define ELF_SECTIONHEADER_TYPE_SHLIB         ((Arazu_u32)10)
+#define ELF_SECTIONHEADER_TYPE_GROUP         ((Arazu_u32)17)
+
+/* flags */
+#define ELF_SECTIONHEADER_FLAGS_WRITE      ((Arazu_u32)0x1)
+#define ELF_SECTIONHEADER_FLAGS_ALLOC      ((Arazu_u32)0x2)
+#define ELF_SECTIONHEADER_FLAGS_EXECINSTR  ((Arazu_u32)0x4)
+#define ELF_SECTIONHEADER_FLAGS_MERGE      ((Arazu_u32)0x10)
+#define ELF_SECTIONHEADER_FLAGS_STRINGS    ((Arazu_u32)0x20)
+#define ELF_SECTIONHEADER_FLAGS_INFO_LINK  ((Arazu_u32)0x40)
+#define ELF_SECTIONHEADER_FLAGS_LINK_ORDER ((Arazu_u32)0x80)
+#define ELF_SECTIONHEADER_FLAGS_GROUP      ((Arazu_u32)0x200)
+#define ELF_SECTIONHEADER_FLAGS_TLS        ((Arazu_u32)0x400)
+
+/* link & info
+
+    DYNAMIC:
+        link: section header index of the string table used
+        info: 0
+
+    HASH:
+        link: section header index of the associated string table
+        info: 0
+
+    REL & RELA:
+        link: section header index of the associated symbol table
+        info: section header index of the section to which the relocations apply
+
+    SYMTAB & DYNSYM:
+        link: section header index of the associated string table
+        info: one greater than the symbol table index of the last local symbol
+
+    GROUP:
+        link: section header index of the associated symbol table
+        info: symbol table index of an enrty in the associated symbol table
+
+    SYMTAB_SHNDX:
+        link: section header index of the associated symbol table section
+        info: 0
+
+*/
 
 #ifdef __cplusplus
 }

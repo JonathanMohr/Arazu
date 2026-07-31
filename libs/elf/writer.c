@@ -126,8 +126,11 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     /* programHeaderCount */
     Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
 
-    /* sectionHeaderSize (TODO: set it to the actual value) */
-    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
+    /* sectionHeaderSize */
+    if (is64)
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_SECTIONHEADER_SIZE_64));
+    else
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_SECTIONHEADER_SIZE_32));
 
     /* sectionHeaderCount */
     Arazu_Bool tooManySections = ARAZU_FALSE;
