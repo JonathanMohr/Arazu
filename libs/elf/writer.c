@@ -85,7 +85,7 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, machine));
 
     /* version */
-    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_VERSION_CURRENT));
+    Buffer_Push_u32(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_VERSION_CURRENT));
 
 
     if (is64)
