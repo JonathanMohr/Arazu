@@ -1,3 +1,6 @@
+#include "arazu/core/object/object.h"
+#include "arazu/core/object/section.h"
+#include "arazu/core/types.h"
 #include <arazu/elf/writer.h>
 
 #include <support.h>
@@ -5,17 +8,17 @@
 #include <elf.h>
 #include <endianness.h>
 
-static inline void Buffer_Push_u8(Arazu_u8** ptr, Arazu_u8 val)
-{
-    **ptr = val;
-    (*ptr)++;
-}
+#define BUFFER_PUSH_FUNCTION(type) \
+    static inline void Buffer_Push_##type(Arazu_u8** ptr, Arazu_##type val) \
+    { \
+        memcpy(*ptr, &val, sizeof(val)); \
+        *ptr += sizeof(val); \
+    }
 
-static inline void Buffer_Push_u16(Arazu_u8** ptr, Arazu_u16 val)
-{
-    memcpy(*ptr, &val, sizeof(val));
-    *ptr += sizeof(val);
-}
+BUFFER_PUSH_FUNCTION(u8)
+BUFFER_PUSH_FUNCTION(u16)
+BUFFER_PUSH_FUNCTION(u32)
+BUFFER_PUSH_FUNCTION(u64)
 
 Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter)
 {
@@ -42,6 +45,7 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
             break;
 
         default:
+            /* TODO: Maybe give info */
             return ARAZU_FALSE;
     }
 
@@ -60,9 +64,103 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     bufferPtr += 7;
 
     
+    /* type */
     Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_TYPE_RELOCATABLE));
 
-    /* TODO: fill the buffer */
+    /* machine */
+    Arazu_u16 machine;
+    switch (Arazu_Object_GetArchitecture(ctx, object))
+    {
+        case ARAZU_ARCHITECTURE_X86:
+            if (is64 == ARAZU_TRUE)
+                machine = ELF_HEADER_MACHINE_X86_64;
+            else
+                machine = ELF_HEADER_MACHINE_386;
+            break;
+
+        default:
+            machine = ELF_HEADER_MACHINE_NONE;
+            break;
+    }
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, machine));
+
+    /* version */
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_VERSION_CURRENT));
+
+
+    if (is64)
+    {
+        /* entry */
+        Buffer_Push_u64(&bufferPtr, Arazu_Endianness_Convert_u64(isLittleEndian, 0));
+
+        /* programHeaderTableOffset */
+        Buffer_Push_u64(&bufferPtr, Arazu_Endianness_Convert_u64(isLittleEndian, 0));
+
+        /* sectionHeaderTableOffset */
+        Buffer_Push_u64(&bufferPtr, Arazu_Endianness_Convert_u64(isLittleEndian, ELF_HEADER_SIZE));
+    }
+    else
+    {
+        /* entry */
+        Buffer_Push_u32(&bufferPtr, Arazu_Endianness_Convert_u32(isLittleEndian, 0));
+
+        /* programHeaderTableOffset */
+        Buffer_Push_u32(&bufferPtr, Arazu_Endianness_Convert_u32(isLittleEndian, 0));
+
+        /* sectionHeaderTableOffset */
+        Buffer_Push_u32(&bufferPtr, Arazu_Endianness_Convert_u32(isLittleEndian, ELF_HEADER_SIZE));
+    }
+
+    /* flags */
+    Buffer_Push_u32(&bufferPtr, Arazu_Endianness_Convert_u32(isLittleEndian, 0)); /* TODO */
+
+    /* headerSize */
+    if (is64)
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_SIZE_64));
+    else
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, ELF_HEADER_SIZE_32));
+
+    /* programHeaderSize */
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0)); /* TODO: maybe set it */
+    
+    /* programHeaderCount */
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
+
+    /* sectionHeaderSize (TODO: set it to the actual value) */
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
+
+    /* sectionHeaderCount */
+    Arazu_Bool tooManySections = ARAZU_FALSE;
+
+    const Arazu_Size sectionSize = Arazu_Object_Section_Size();
+    const Arazu_Object_Section* sections = Arazu_Object_GetSections(ctx, object);
+    Arazu_Value sectionCount = 4; /* null, .symtab, .strtab, .shstrtab */
+
+    for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
+    {
+        /* TODO: Very ugly */
+        const Arazu_Object_Section* section = (Arazu_Object_Section*)((Arazu_u8*)sections + (i * sectionSize));
+
+        sectionCount++;
+
+        if (Arazu_Object_Section_GetRelocationCount(ctx, section) > 0)
+            sectionCount++; /* relocation section */
+    }
+
+    if (sectionCount < 0xFF00)
+    {
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, (Arazu_u16)sectionCount));
+    }
+    else
+    {
+        Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
+        tooManySections = ARAZU_TRUE;
+    }
+
+    /* sectionNameStringTableIndex (TODO: set it to the actual value) */
+    Buffer_Push_u16(&bufferPtr, Arazu_Endianness_Convert_u16(isLittleEndian, 0));
+
+    (void)tooManySections;
 
     if (fileWriter->write(fileWriter, buffer, ELF_HEADER_SIZE) != ARAZU_TRUE)
     {

@@ -73,6 +73,9 @@ Elf64_Ssize     = Arazu_i64
 
 #define ELF_HEADER_SIZE 64
 
+#define ELF_HEADER_SIZE_64 64
+#define ELF_HEADER_SIZE_32 52
+
 /* ident */
 #define ELF_HEADER_IDENT_MAGIC_0 ((Arazu_u8)0x7F)
 #define ELF_HEADER_IDENT_MAGIC_1 ((Arazu_u8)'E')
