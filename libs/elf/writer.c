@@ -165,6 +165,8 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
 
     (void)tooManySections;
 
+    /* TODO: Section header table */
+
     if (fileWriter->write(fileWriter, buffer, ELF_HEADER_SIZE) != ARAZU_TRUE)
     {
         return ARAZU_FALSE;
