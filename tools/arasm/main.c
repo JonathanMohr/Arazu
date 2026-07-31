@@ -52,7 +52,7 @@ static void destroyElfFileWriter(Arazu_ELF_FileWriter* writer)
 
 int main(int argc, const char* argv[])
 {
-    const char* filename = "output_arasm.o";
+    const char* filename = "test_arasm.o";
 
     (void)argc;
     (void)argv;
@@ -587,7 +587,7 @@ int main(int argc, const char* argv[])
     Arazu_Context_Destroy(context);
     stringPool.destroy(&stringPool);
 
-    printf("This is just a placeholder. Do not try to this. This will may create a %s to test the library\n", filename);
+    printf("This is just a placeholder. Do not try to this. This has created and written to a %s to test the library\n", filename);
 
     return 0;
 }

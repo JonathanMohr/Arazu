@@ -22,4 +22,5 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-output_arasm.o
+test_arasm.o
+test_nasm.o

@@ -172,7 +172,5 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
         return ARAZU_FALSE;
     }
 
-    (void)is64;
-
-    return ARAZU_FALSE;
+    return ARAZU_TRUE;
 }
