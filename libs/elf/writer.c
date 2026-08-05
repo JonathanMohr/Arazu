@@ -91,12 +91,17 @@ static Arazu_Bool Arazu_ELF_WriteSectionHeader(
 Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter)
 {
     Arazu_Bool isLittleEndian = ARAZU_TRUE; /* TODO: Set dynamically */
+    Arazu_Bool useAddend = ARAZU_TRUE; /* TODO: Set dynamically */
+
+    Arazu_Size sectionNameLength = 1 + 8 + 8 + 10; /* null, .symtab, .strtab, .shstrtab */
 
     Arazu_uValue sectionCount = 4; /* null, .symtab, .strtab, .shstrtab */
 
     for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
     {
         const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
+
+        /* TODO: sectionNameLength */
 
         sectionCount++;
 
@@ -265,6 +270,8 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
 
     (void)strtabIndex;
     (void)symtabIndex;
+    (void)useAddend;
+    (void)sectionNameLength;
 
     /* TODO: Other section headers */
 
