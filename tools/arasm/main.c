@@ -234,7 +234,7 @@ int main(int argc, const char* argv[])
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
 
     /* inc [eax + 4] */
-    (void)Arazu_Object_Section_PushByte(context, section, 0xFF);
+    (void)Arazu_Object_Section_PushByte(context, section, 0xFE);
     (void)Arazu_Object_Section_PushByte(context, section, 0x40);
     (void)Arazu_Object_Section_PushByte(context, section, 0x04);
 
