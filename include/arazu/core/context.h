@@ -8,7 +8,7 @@ extern "C" {
 #include "detail.h"
 #include "types.h"
 
-typedef void* Arazu_String;
+typedef const void* Arazu_String;
 
 typedef struct Arazu_StringPool
 {
@@ -55,6 +55,7 @@ ARAZU_DETAIL_API Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allo
 ARAZU_DETAIL_API void Arazu_Context_Destroy(Arazu_Context* ctx);
 
 ARAZU_DETAIL_API const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx);
+ARAZU_DETAIL_API const Arazu_StringPool* Arazu_Context_GetStringPool(const Arazu_Context* ctx);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-#include "arazu/core/object/object.h"
+#include "arazu/core/context.h"
 #include "arazu/core/object/section.h"
 #include "arazu/core/types.h"
 #include <arazu/elf/writer.h>
@@ -93,20 +93,34 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     Arazu_Bool isLittleEndian = ARAZU_TRUE; /* TODO: Set dynamically */
     Arazu_Bool useAddend = ARAZU_TRUE; /* TODO: Set dynamically */
 
-    Arazu_Size sectionNameLength = 1 + 8 + 8 + 10; /* null, .symtab, .strtab, .shstrtab */
+    Arazu_Size sectionNameLengths = 1 + 8 + 8 + 10; /* null, .symtab, .strtab, .shstrtab */
 
     Arazu_uValue sectionCount = 4; /* null, .symtab, .strtab, .shstrtab */
+
+    Arazu_Size elfAlignment = 16;
 
     for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
     {
         const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
+        const Arazu_String name = Arazu_Object_Section_GetName(ctx, section);
+        const char* nameStr = Arazu_Context_GetStringPool(ctx)->toCString(Arazu_Context_GetStringPool(ctx), name);
 
-        /* TODO: sectionNameLength */
+        Arazu_Size sectionNameLength = 0;
+        while (*nameStr)
+        {
+            sectionNameLength++;
+            nameStr++;
+        }
+
+        sectionNameLengths += sectionNameLength + 1;
 
         sectionCount++;
 
         if (Arazu_Object_Section_GetRelocationCount(ctx, section) > 0)
+        {
+            sectionNameLengths += sectionNameLength + ((useAddend == ARAZU_TRUE) ? 6 : 5);
             sectionCount++; /* relocation section */
+        }
     }
 
     const Arazu_uValue shstrtabIndex = sectionCount - 1;
@@ -268,10 +282,117 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
         0
     ) != ARAZU_TRUE) return ARAZU_FALSE;
 
+    Arazu_Size currentFileOffset = ELF_HEADER_SIZE + sectionCount * ((is64 == ARAZU_TRUE) ? ELF_SECTIONHEADER_SIZE_64 : ELF_SECTIONHEADER_SIZE_32);
+    currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+    Arazu_Size currentSectionNameOffset = 1;
+
+    Arazu_Size currentSectionIndex = 1;
+
+    for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
+    {
+        const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
+        const Arazu_String name = Arazu_Object_Section_GetName(ctx, section);
+        const char* nameStr = Arazu_Context_GetStringPool(ctx)->toCString(Arazu_Context_GetStringPool(ctx), name);
+
+        if (currentSectionNameOffset > 0xFFFFFFFF)
+            return ARAZU_FALSE; /* TODO */
+
+        Arazu_uValue size = Arazu_Object_Section_GetSize(ctx, section);
+
+        Arazu_u32 type;
+        switch (Arazu_Object_Section_GetType(ctx, section))
+        {
+            case ARAZU_OBJECT_SECTION_TYPE_INITIALIZED:
+                type = ELF_SECTIONHEADER_TYPE_PROGBITS;
+                break;
+
+            case ARAZU_OBJECT_SECTION_TYPE_UNINITIALIZED:
+                type = ELF_SECTIONHEADER_TYPE_NOBITS;
+                break;
+
+            default:
+                type = ELF_SECTIONHEADER_TYPE_NULL;
+                break;
+        }
+
+        Arazu_u32 flags = 0;
+        Arazu_Object_Section_Flags sectionFlags = Arazu_Object_Section_GetFlags(ctx, section);
+        if (sectionFlags & ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED)
+            flags |= ELF_SECTIONHEADER_FLAGS_ALLOC;
+        if (sectionFlags & ARAZU_OBJECT_SECTION_FLAGS_EXECUTABLE)
+            flags |= ELF_SECTIONHEADER_FLAGS_EXECINSTR;
+        if (sectionFlags & ARAZU_OBJECT_SECTION_FLAGS_WRITABLE)
+            flags |= ELF_SECTIONHEADER_FLAGS_WRITE;
+
+        if (Arazu_ELF_WriteSectionHeader(
+            ctx, fileWriter, isLittleEndian, is64,
+            (Arazu_u32)currentSectionNameOffset,
+            type,
+            flags,
+            0,
+            currentFileOffset,
+            size,
+            0, /* TODO */
+            0, /* TODO */
+            Arazu_Object_Section_GetAlign(ctx, section),
+            0
+        ) != ARAZU_TRUE) return ARAZU_FALSE;
+        currentSectionIndex++;
+
+        currentFileOffset += size;
+        currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+        Arazu_Size sectionNameLength = 0;
+        while (*nameStr)
+        {
+            sectionNameLength++;
+            nameStr++;
+        }
+        currentSectionNameOffset += sectionNameLength + 1;
+
+        Arazu_uValue relocationCount = Arazu_Object_Section_GetRelocationCount(ctx, section);
+        if (relocationCount > 0)
+        {
+            if (currentSectionNameOffset > 0xFFFFFFFF)
+                return ARAZU_FALSE; /* TODO */
+
+            if (symtabIndex > 0xFFFFFFFF)
+                return ARAZU_FALSE; /* TODO */
+
+            if (currentSectionIndex > 0xFFFFFFFF)
+                return ARAZU_FALSE; /* TODO */
+
+            const Arazu_Size entrySize = (is64 == ARAZU_TRUE)
+             ? ((useAddend == ARAZU_TRUE) ? ELF_RELOCATION_RELA_SIZE64 : ELF_RELOCATION_REL_SIZE64)
+             : ((useAddend == ARAZU_TRUE) ? ELF_RELOCATION_RELA_SIZE32 : ELF_RELOCATION_REL_SIZE32);
+
+            if (Arazu_ELF_WriteSectionHeader(
+                ctx, fileWriter, isLittleEndian, is64,
+                (Arazu_u32)currentSectionNameOffset,
+                (useAddend == ARAZU_TRUE) ? ELF_SECTIONHEADER_TYPE_RELA : ELF_SECTIONHEADER_TYPE_REL,
+                0,
+                0,
+                currentFileOffset,
+                size,
+                (Arazu_u32)symtabIndex,
+                (Arazu_u32)currentSectionIndex,
+                4,
+                entrySize
+            ) != ARAZU_TRUE) return ARAZU_FALSE;
+            currentSectionIndex++;
+
+            currentFileOffset += relocationCount * entrySize;
+            currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+            currentSectionNameOffset += sectionNameLength + ((useAddend == ARAZU_TRUE) ? 6 : 5);
+        }
+    }
+
     (void)strtabIndex;
     (void)symtabIndex;
     (void)useAddend;
-    (void)sectionNameLength;
+    (void)sectionNameLengths;
 
     /* TODO: Other section headers */
 

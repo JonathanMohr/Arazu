@@ -88,6 +88,16 @@ Elf64_Ssize     = Arazu_i64
 
         Arazu_u32 (32-bit) / Arazu_u64 (64-bit) alignment;
         Arazu_u32 (32-bit) / Arazu_u64 (64-bit) entrySize;
+
+    Relocation:
+        Rel Entry:
+            Arazu_u32 (32-bit) / Arazu_u64 (64-bit) addr;
+            Arazu_u32 (32-bit) / Arazu_u64 (64-bit) info;
+
+        Rela Entry:
+            Arazu_u32 (32-bit) / Arazu_u64 (64-bit) addr;
+            Arazu_u32 (32-bit) / Arazu_u64 (64-bit) info;
+            Arazu_i32 (32-bit) / Arazu_i64 (64-bit) addend;
 */
 
 #define ELF_HEADER_SIZE 64
@@ -219,6 +229,15 @@ Elf64_Ssize     = Arazu_i64
         info: 0
 
 */
+
+
+#define ELF_RELOCATION_ENTRY_SIZE 24
+
+#define ELF_RELOCATION_REL_SIZE32  8
+#define ELF_RELOCATION_REL_SIZE64  16
+#define ELF_RELOCATION_RELA_SIZE32 12
+#define ELF_RELOCATION_RELA_SIZE64 24
+
 
 #ifdef __cplusplus
 }

@@ -26,3 +26,8 @@ const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx)
 {
     return &ctx->allocator;
 }
+
+const Arazu_StringPool* Arazu_Context_GetStringPool(const Arazu_Context* ctx)
+{
+    return &ctx->stringPool;
+}
