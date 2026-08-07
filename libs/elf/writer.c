@@ -1,5 +1,7 @@
 #include "arazu/core/context.h"
+#include "arazu/core/object/object.h"
 #include "arazu/core/object/section.h"
+#include "arazu/core/object/symbol.h"
 #include "arazu/core/types.h"
 #include <arazu/elf/writer.h>
 
@@ -94,6 +96,27 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     Arazu_Bool useAddend = ARAZU_TRUE; /* TODO: Set dynamically */
 
     Arazu_Size sectionNameLengths = 1 + 8 + 8 + 10; /* null, .symtab, .strtab, .shstrtab */
+    Arazu_Size symbolNameLengths = 1; /* null */
+
+    Arazu_uValue symbolCount = 1 + Arazu_Object_GetSymbolCount(ctx, object); /* null */
+    Arazu_uValue localSymbolCount = 1; /* null */
+
+    for (Arazu_uValue i = 0; i < symbolCount - 1; i++)
+    {
+        const Arazu_Object_Symbol* symbol = Arazu_Object_GetSymbol(ctx, object, i);
+        if (Arazu_Object_Symbol_GetVisibility(ctx, symbol))
+            localSymbolCount++;
+
+        const Arazu_String symbolName = Arazu_Object_Symbol_GetName(ctx, symbol);
+        const char* symbolNameStr = Arazu_Context_GetStringPool(ctx)->toCString(Arazu_Context_GetStringPool(ctx), symbolName);
+
+        while (*symbolNameStr)
+        {
+            symbolNameLengths++;
+            symbolNameStr++;
+        }
+        symbolNameLengths++;
+    }
 
     Arazu_uValue sectionCount = 4; /* null, .symtab, .strtab, .shstrtab */
 
@@ -104,6 +127,14 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
         const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
         const Arazu_String name = Arazu_Object_Section_GetName(ctx, section);
         const char* nameStr = Arazu_Context_GetStringPool(ctx)->toCString(Arazu_Context_GetStringPool(ctx), name);
+
+        Arazu_uValue sectionSymbolCount = Arazu_Object_Section_GetSymbolCount(ctx, section);
+        for (Arazu_uValue j = 0; j < sectionSymbolCount; j++)
+        {
+            const Arazu_Object_Symbol* symbol = Arazu_Object_Section_GetSymbol(ctx, section, j);
+            if (Arazu_Object_Symbol_GetVisibility(ctx, symbol))
+                localSymbolCount++;
+        }
 
         Arazu_Size sectionNameLength = 0;
         while (*nameStr)
@@ -121,6 +152,8 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
             sectionNameLengths += sectionNameLength + ((useAddend == ARAZU_TRUE) ? 6 : 5);
             sectionCount++; /* relocation section */
         }
+
+        symbolCount += Arazu_Object_Section_GetSymbolCount(ctx, section);
     }
 
     const Arazu_uValue shstrtabIndex = sectionCount - 1;
@@ -282,8 +315,10 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
         0
     ) != ARAZU_TRUE) return ARAZU_FALSE;
 
-    Arazu_Size currentFileOffset = ELF_HEADER_SIZE + sectionCount * ((is64 == ARAZU_TRUE) ? ELF_SECTIONHEADER_SIZE_64 : ELF_SECTIONHEADER_SIZE_32);
+    const Arazu_Size startFileOffset = ELF_HEADER_SIZE + sectionCount * ((is64 == ARAZU_TRUE) ? ELF_SECTIONHEADER_SIZE_64 : ELF_SECTIONHEADER_SIZE_32);
+    Arazu_Size currentFileOffset = startFileOffset;
     currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+    const Arazu_Size sectionHeaderPadding = currentFileOffset - startFileOffset;
 
     Arazu_Size currentSectionNameOffset = 1;
 
@@ -374,7 +409,7 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
                 0,
                 0,
                 currentFileOffset,
-                size,
+                relocationCount * entrySize,
                 (Arazu_u32)symtabIndex,
                 (Arazu_u32)currentSectionIndex,
                 4,
@@ -389,12 +424,95 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
         }
     }
 
-    (void)strtabIndex;
-    (void)symtabIndex;
-    (void)useAddend;
-    (void)sectionNameLengths;
+    // SYMTAB
+    if (currentSectionNameOffset > 0xFFFFFFFF)
+        return ARAZU_FALSE; /* TODO */
 
-    /* TODO: Other section headers */
+    if (localSymbolCount > 0xFFFFFFFF)
+        return ARAZU_FALSE; /* TODO */
+
+    if (strtabIndex > 0xFFFFFFFF)
+        return ARAZU_FALSE; /* TODO */
+
+    const Arazu_Size symtabEntrySize = 0; /* TODO */
+
+    if (Arazu_ELF_WriteSectionHeader(
+        ctx, fileWriter, isLittleEndian, is64,
+        (Arazu_u32)currentSectionNameOffset,
+        ELF_SECTIONHEADER_TYPE_SYMTAB,
+        0,
+        0,
+        currentFileOffset,
+        symbolCount * symtabEntrySize,
+        (Arazu_u32)strtabIndex,
+        (Arazu_u32)localSymbolCount,
+        4,
+        symtabEntrySize
+    ) != ARAZU_TRUE) return ARAZU_FALSE;
+    
+    currentSectionNameOffset += 8;
+    currentFileOffset += symbolCount * symtabEntrySize;
+    currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+    // STRTAB
+    if (currentSectionNameOffset > 0xFFFFFFFF)
+        return ARAZU_FALSE; /* TODO */
+
+    if (Arazu_ELF_WriteSectionHeader(
+        ctx, fileWriter, isLittleEndian, is64,
+        (Arazu_u32)currentSectionNameOffset,
+        ELF_SECTIONHEADER_TYPE_STRTAB,
+        0,
+        0,
+        currentFileOffset,
+        symbolNameLengths,
+        0,
+        0,
+        1,
+        0
+    ) != ARAZU_TRUE) return ARAZU_FALSE;
+    
+    currentSectionNameOffset += 8;
+    currentFileOffset += symbolNameLengths;
+    currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+    // SHSTRTAB
+    if (currentSectionNameOffset > 0xFFFFFFFF)
+        return ARAZU_FALSE; /* TODO */
+
+    if (Arazu_ELF_WriteSectionHeader(
+        ctx, fileWriter, isLittleEndian, is64,
+        (Arazu_u32)currentSectionNameOffset,
+        ELF_SECTIONHEADER_TYPE_STRTAB,
+        0,
+        0,
+        currentFileOffset,
+        sectionNameLengths,
+        0,
+        0,
+        1,
+        0
+    ) != ARAZU_TRUE) return ARAZU_FALSE;
+    
+    currentSectionNameOffset += 10;
+    currentFileOffset += sectionNameLengths;
+    currentFileOffset = ((currentFileOffset + elfAlignment - 1) / elfAlignment) * elfAlignment;
+
+    Arazu_u8 paddingBuffer[16] = {0};
+    Arazu_Size paddingRemaining = sectionHeaderPadding;
+    while (paddingRemaining > 0)
+    {
+        const Arazu_Size chunk = (sizeof(paddingBuffer) < paddingRemaining) ? sizeof(paddingBuffer) : paddingRemaining;
+
+        if (fileWriter->write(fileWriter, paddingBuffer, chunk) != ARAZU_TRUE)
+            return ARAZU_FALSE;
+
+        paddingRemaining -= chunk;
+    }
+
+
+    /* TODO: section data */
+    
 
     return ARAZU_TRUE;
 }
