@@ -14,7 +14,7 @@ Arazu_Bool Arazu_Object_Relocation_Create(
 
     Arazu_String symbol,
 
-    Arazu_u16 size, /* 8, 16, 24, 32, 64, ... */
+    Arazu_u16 size, /* in bits */
     Arazu_Object_Relocation_Type type,
     Arazu_Bool isSigned,
 

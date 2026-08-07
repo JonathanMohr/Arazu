@@ -1,5 +1,6 @@
 #include "arazu/core/context.h"
 #include "arazu/core/object/object.h"
+#include "arazu/core/object/relocation.h"
 #include "arazu/core/object/section.h"
 #include "arazu/core/object/symbol.h"
 #include "arazu/core/types.h"
@@ -88,6 +89,29 @@ static Arazu_Bool Arazu_ELF_WriteSectionHeader(
         return ARAZU_FALSE;
 
     return ARAZU_TRUE;
+}
+
+static void write_bits(Arazu_u8* buffer, Arazu_Size bitOffset, Arazu_Size bitCount, Arazu_Value value, Arazu_Bool isLittleEndian)
+{
+    for (Arazu_Size i = 0; i < bitCount; i++)
+    {
+        Arazu_Size pos = bitOffset + i;
+        Arazu_Size byteIndex = pos / 8;
+        Arazu_u8 bitInByteIndex = pos % 8;
+
+        Arazu_u64 destBitPos;
+        if (isLittleEndian == ARAZU_TRUE)
+            destBitPos = bitInByteIndex;
+        else
+            destBitPos = 7 - bitInByteIndex;
+
+        Arazu_u8 bitValue = (Arazu_u8)((value >> (bitCount - 1 - i)) & 0x1);
+
+        if (bitValue)
+            buffer[byteIndex] |= (Arazu_u8)(1u << destBitPos);
+        else
+            buffer[byteIndex] &= (Arazu_u8)~(1u << destBitPos);
+    }
 }
 
 Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter)
@@ -324,6 +348,8 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
 
     Arazu_Size currentSectionIndex = 1;
 
+    Arazu_uValue biggestSectionSize = 0;
+
     for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
     {
         const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
@@ -334,6 +360,8 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
             return ARAZU_FALSE; /* TODO */
 
         Arazu_uValue size = Arazu_Object_Section_GetSize(ctx, section);
+        if (size > biggestSectionSize)
+            biggestSectionSize = size;
 
         Arazu_u32 type;
         switch (Arazu_Object_Section_GetType(ctx, section))
@@ -511,8 +539,45 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
     }
 
 
-    /* TODO: section data */
-    
+    Arazu_u8* sectionBuffer = Arazu_Context_GetAllocator(ctx)->allocate(Arazu_Context_GetAllocator(ctx), biggestSectionSize);
+    if (!sectionBuffer)
+        return ARAZU_FALSE;
+
+    for (Arazu_uValue i = 0; i < Arazu_Object_GetSectionCount(ctx, object); i++)
+    {
+        const Arazu_Object_Section* section = Arazu_Object_GetSection(ctx, object, i);
+        const Arazu_Size sectionSize = Arazu_Object_Section_GetSize(ctx, section);
+        const Arazu_u8* constSectionBuffer = Arazu_Object_Section_GetBuffer(ctx, section);
+
+        for (Arazu_Size j = 0; j < sectionSize; j++)
+            sectionBuffer[j] = constSectionBuffer[j];
+
+        const Arazu_uValue relocationCount = Arazu_Object_Section_GetRelocationCount(ctx, section);
+
+        if (useAddend != ARAZU_TRUE)
+        {
+            for (Arazu_uValue j = 0; j < relocationCount; j++)
+            {
+                const Arazu_Object_Relocation* relocation = Arazu_Object_Section_GetRelocation(ctx, section, j);
+
+                const Arazu_uValue offsetInSection = Arazu_Object_Relocation_GetOffsetInSection(ctx, relocation);
+
+                const Arazu_uValue bitCount = Arazu_Object_Relocation_GetSize(ctx, relocation);
+                const Arazu_uValue bitOffset = 0; /* TODO */
+                
+                if (sectionSize < (offsetInSection + ((bitOffset + bitCount + 7) / 8)))
+                {
+                    Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), sectionBuffer);
+                    return ARAZU_FALSE;
+                }
+                
+                write_bits(sectionBuffer + offsetInSection, bitOffset, bitCount, Arazu_Object_Relocation_GetAddend(ctx, relocation), isLittleEndian);
+            }
+        }
+    }
+
+    Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), sectionBuffer);
+
 
     return ARAZU_TRUE;
 }

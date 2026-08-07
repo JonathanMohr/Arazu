@@ -315,7 +315,7 @@ int main(int argc, const char* argv[])
 
     Arazu_Object_Symbol_Destroy(context, symbol);
 
-    if (Arazu_Object_Relocation_Create(relocation, context, 0, 1, stringPool.intern(&stringPool, "number"), 4, ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE, ARAZU_FALSE, ARAZU_TRUE, ARAZU_FALSE) != ARAZU_TRUE)
+    if (Arazu_Object_Relocation_Create(relocation, context, 0, 1, stringPool.intern(&stringPool, "number"), 4 * 8, ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE, ARAZU_FALSE, ARAZU_TRUE, ARAZU_FALSE) != ARAZU_TRUE)
     {
         fputs("Failed to create relocation in .text\n", stderr);
 
