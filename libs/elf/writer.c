@@ -116,7 +116,7 @@ static void write_bits(Arazu_u8* buffer, Arazu_Size bitOffset, Arazu_Size bitCou
 
 Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_ELF_FileWriter* fileWriter)
 {
-    Arazu_Bool isLittleEndian = ARAZU_TRUE; /* TODO: Set dynamically */
+    Arazu_Bool isLittleEndian = ARAZU_FALSE; /* TODO: Set dynamically */
     Arazu_Bool useAddend = ARAZU_TRUE; /* TODO: Set dynamically */
 
     Arazu_Size sectionNameLengths = 1 + 8 + 8 + 10; /* null, .symtab, .strtab, .shstrtab */
@@ -573,6 +573,28 @@ Arazu_Bool Arazu_ELF_WriteObject(const Arazu_Context* ctx, const Arazu_Object* o
                 
                 write_bits(sectionBuffer + offsetInSection, bitOffset, bitCount, Arazu_Object_Relocation_GetAddend(ctx, relocation), isLittleEndian);
             }
+        }
+
+        if (fileWriter->write(fileWriter, sectionBuffer, sectionSize) != ARAZU_TRUE)
+        {
+            Arazu_Context_GetAllocator(ctx)->free(Arazu_Context_GetAllocator(ctx), sectionBuffer);
+            return ARAZU_FALSE;
+        }
+
+        paddingRemaining = (elfAlignment - sectionSize % elfAlignment) % elfAlignment;
+        while (paddingRemaining > 0)
+        {
+            const Arazu_Size chunk = (sizeof(paddingBuffer) < paddingRemaining) ? sizeof(paddingBuffer) : paddingRemaining;
+
+            if (fileWriter->write(fileWriter, paddingBuffer, chunk) != ARAZU_TRUE)
+                return ARAZU_FALSE;
+
+            paddingRemaining -= chunk;
+        }
+
+        for (Arazu_uValue j = 0; j < relocationCount; j++)
+        {
+            /* TODO */
         }
     }
 
