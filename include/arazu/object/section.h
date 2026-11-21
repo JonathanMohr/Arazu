@@ -5,9 +5,10 @@
 extern "C" {
 #endif
 
-#include "../context.h"
-#include "relocation.h"
-#include "symbol.h"
+#include <arazu/context.h>
+
+#include <arazu/object/relocation.h>
+#include <arazu/object/symbol.h>
 
 typedef Arazu_u64 Arazu_Object_Section_Flags;
 #define ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED  ((Arazu_Object_Section_Flags)1 << 0)

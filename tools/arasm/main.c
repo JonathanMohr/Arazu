@@ -1,19 +1,16 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include <arazu/core/context.h>
-#include <arazu/core/object/object.h>
-
-#include <arazu/elf/writer.h>
-
 #include "allocator.h"
 #include "string_pool.h"
+
+/*
 
 static Arazu_Bool ELFFileWriter_Write(Arazu_ELF_FileWriter* writer, const Arazu_u8* data, Arazu_Size size)
 {
     FILE* file = (FILE*)writer->userdata;
 
-    if (size > SIZE_MAX) /* TODO */
+    if (size > SIZE_MAX)
         return ARAZU_FALSE;
     
     size_t s = (size_t)size;
@@ -155,9 +152,6 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-
-    /* .text */
-
     if (Arazu_Object_Section_Create(section, context, stringPool.intern(&stringPool, ".text"), 8, ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED | ARAZU_OBJECT_SECTION_FLAGS_EXECUTABLE, ARAZU_OBJECT_SECTION_TYPE_INITIALIZED) != ARAZU_TRUE)
     {
         fputs("Failed to create .text section\n", stderr);
@@ -226,19 +220,16 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    /* mov eax, 0x00 ; relocation */
     (void)Arazu_Object_Section_PushByte(context, section, 0xB8);
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
     (void)Arazu_Object_Section_PushByte(context, section, 0x00);
 
-    /* inc [eax + 4] */
     (void)Arazu_Object_Section_PushByte(context, section, 0xFE);
     (void)Arazu_Object_Section_PushByte(context, section, 0x40);
     (void)Arazu_Object_Section_PushByte(context, section, 0x04);
 
-    /* ret */
     (void)Arazu_Object_Section_PushByte(context, section, 0xC3);
 
     if (Arazu_Object_Symbol_Create(symbol, context, 0, stringPool.intern(&stringPool, "test_function"), stringPool.intern(&stringPool, ".text"), ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION, ARAZU_OBJECT_SYMBOL_VISIBILITY_GLOBAL, ARAZU_TRUE, 2, 0, stringPool.intern(&stringPool, "test.asm")) != ARAZU_TRUE)
@@ -369,8 +360,6 @@ int main(int argc, const char* argv[])
         return 1;
     }
     Arazu_Object_Section_Destroy(context, section);
-
-    /* .data */
 
     if (Arazu_Object_Section_Create(section, context, stringPool.intern(&stringPool, ".data"), 8, ARAZU_OBJECT_SECTION_FLAGS_ALLOCATED, ARAZU_OBJECT_SECTION_TYPE_INITIALIZED) != ARAZU_TRUE)
     {
@@ -589,5 +578,12 @@ int main(int argc, const char* argv[])
 
     printf("This is just a placeholder. Do not try to this. This has created and written to a %s to test the library\n", filename);
 
+    return 0;
+}
+
+*/
+
+int main(void)
+{
     return 0;
 }

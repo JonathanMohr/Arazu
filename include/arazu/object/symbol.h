@@ -1,12 +1,11 @@
 #ifndef ARAZU_CORE_OBJECT_SYMBOL_H
 #define ARAZU_CORE_OBJECT_SYMBOL_H
 
-#include "arazu/core/types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "../context.h"
+#include <arazu/context.h>
 
 typedef Arazu_u16 Arazu_Object_Symbol_State;
 #define ARAZU_OBJECT_SYMBOL_STATE_IN_SECTION ((Arazu_Object_Symbol_State)0)

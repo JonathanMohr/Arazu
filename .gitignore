@@ -1,18 +1,17 @@
-build/
+/.build/
+/.tmp/
 
-compile_commands.json
-.cache
+/dist/
+/logs/
+/sysroots/
 
-dist/
+/compile_commands.json
 
-logs/
-
-tmp/
-sysroots/
 
 __pycache__/
 *.pyc
 *.pyo
+
 
 .DS_Store
 .AppleDouble
@@ -21,6 +20,3 @@ __pycache__/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-test_arasm.o
-test_nasm.o

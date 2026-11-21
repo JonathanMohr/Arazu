@@ -1,12 +1,11 @@
 #ifndef ARAZU_CORE_OBJECT_RELOCATION_H
 #define ARAZU_CORE_OBJECT_RELOCATION_H
 
-#include "arazu/core/types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "../context.h"
+#include <arazu/context.h>
 
 typedef Arazu_u16 Arazu_Object_Relocation_Type;
 #define ARAZU_OBJECT_RELOCATION_TYPE_ABSOLUTE    ((Arazu_Object_Relocation_Type)0)

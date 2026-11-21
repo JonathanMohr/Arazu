@@ -1,7 +1,7 @@
 #ifndef STRING_POOL_H
 #define STRING_POOL_H
 
-#include <arazu/core/context.h>
+#include <arazu/context.h>
 #include <stdlib.h>
 #include <string.h>
 

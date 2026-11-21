@@ -1,8 +1,9 @@
-import ci.toolchains.toolchain as toolchain
-import ci.cache as cache
-import ci.compileCommands as compileCommands
-from ci.defs import BuildMode, ARCH, OS, OPTIMIZATION, PORTABILITY, LINKING, HOST
+import build.toolchain.toolchain as toolchain
+import build.cache as cache
+import build.compileCommands as compileCommands
+from build.defs import BuildMode, ARCH, OS, OPTIMIZATION, PORTABILITY, LINKING, HOST
 
+from typing import assert_never
 from pathlib import Path
 import subprocess
 import shutil
@@ -10,21 +11,49 @@ import shutil
 def Parse_Dependency_File(dep_file: Path) -> list[str]:
     if not dep_file.exists():
         return []
-        
-    # TODO: Handle '\ '
 
     content = dep_file.read_text()
-    content = content.replace('\\\n', ' ')
 
-    parts = content.split()
+    content = content.replace('\\\r\n', ' ').replace('\\\n', ' ')
 
-    if not parts:
+    tokens: list[str] = []
+    current: list[str] = []
+    i, n = 0, len(content)
+
+    while i < n:
+        c = content[i]
+
+        if c == '\\' and i + 1 < n and content[i + 1] in (' ', '\\', '#'):
+            current.append(content[i + 1])
+            i += 2
+            continue
+
+        if c == '$' and i + 1 < n and content[i + 1] == '$':
+            current.append('$')
+            i += 2
+            continue
+
+        if c.isspace():
+            if current:
+                tokens.append(''.join(current))
+                current = []
+            i += 1
+            continue
+
+        current.append(c)
+        i += 1
+
+    if current:
+        tokens.append(''.join(current))
+
+    if not tokens:
         return []
-        
-    return parts[1:]
+
+    return tokens[1:]
+
 
 def Get_Compile_Flags(mode: BuildMode) -> list[str]:
-    flags = []
+    flags: list[str] = []
 
     # Don't leak absolute paths
     flags.append(f"-fdebug-prefix-map={mode.project_root}=project_root")
@@ -80,6 +109,9 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
                 *Useful_Flags,
             ])
 
+        case _:
+            assert_never(mode.optimization)
+
     # Portability
     match mode.portability:
         case PORTABILITY.MACHINE:
@@ -100,6 +132,11 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
                         "-march=armv8-a",
                         "-mtune=generic",
                     ])
+                case _:
+                    assert_never(mode.target_arch)
+
+        case _:
+            assert_never(mode.portability)
 
     # Linking
     match mode.linking:
@@ -113,6 +150,9 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
             flags.extend([
 
             ])
+
+        case _:
+            assert_never(mode.linking)
 
     # Assertions
     if mode.assertions:
@@ -129,6 +169,7 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
         flags.extend([
             "-ftrapv",
             "-fstack-protector-all",
+            "-fsanitize=address,undefined",
             "-D_FORTIFY_SOURCE=2"
         ])
     else:
@@ -162,6 +203,9 @@ def Get_Compile_Flags(mode: BuildMode) -> list[str]:
                 "-nostdinc",
                 "-fno-builtin",
             ])
+
+        case _:
+            assert_never(mode.host)
 
     # Sysroot
     if mode.sysroot:
@@ -236,6 +280,9 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
                 *Useful_Flags,
             ])
 
+        case _:
+            assert_never(mode.optimization)
+
     # Portability
     if mode.lto:
         match mode.portability:
@@ -257,6 +304,11 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
                             "-march=armv8-a",
                             "-mtune=generic",
                         ])
+                    case _:
+                        assert_never(mode.target_arch)
+
+            case _:
+                assert_never(mode.portability)
 
     # Linking
     match mode.linking:
@@ -271,9 +323,20 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
 
             ])
 
+        case _:
+            assert_never(mode.linking)
+
     # Assertions
 
     # Sanitizers
+    if mode.sanitizers: # TODO: Those require libraries
+        flags.extend([
+            "-fsanitize=address,undefined"
+        ])
+    else:
+        flags.extend([
+
+        ])
 
     # Debug information
     if mode.debuginfo:
@@ -320,6 +383,9 @@ def Get_Link_Flags(mode: BuildMode) -> list[str]:
                 "-nostartfiles",
             ])
 
+        case _:
+            assert_never(mode.host)
+
     # Sysroot
     if mode.sysroot:
         flags.append(f"--sysroot={mode.sysroot}")
@@ -335,22 +401,29 @@ def Get_Target(mode: BuildMode) -> str:
                     return "x86_64-pc-windows-msvc"
                 case ARCH.arm64:
                     return "aarch64-pc-windows-msvc"
-                
+                case _:
+                    assert_never(mode.target_arch)
+
         case OS.macOS:
             match mode.target_arch:
                 case ARCH.x86_64:
                     return "x86_64-apple-macosx"
                 case ARCH.arm64:
                     return "aarch64-apple-macosx"
-                
+                case _:
+                    assert_never(mode.target_arch)
+
         case OS.Linux:
             match mode.target_arch:
                 case ARCH.x86_64:
                     return "x86_64-unknown-linux-gnu"
                 case ARCH.arm64:
                     return "aarch64-unknown-linux-gnu"
-                
-    raise RuntimeError("Unknown combination of target_os and target_arch")
+                case _:
+                    assert_never(mode.target_arch)
+
+        case _:
+            assert_never(mode.target_os)
 
 
 def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_rel: Path, out_dir: Path, doCompileCommands: bool) -> Path:
@@ -368,7 +441,7 @@ def Compile_C_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, src_
 
     for define in self.defines:
         k, v = define
-        args.append(f"-D{k}={v}" if v is not None else f"-D{k}")
+        args.append(f"-D{k}={v}" if v != "" else f"-D{k}")
 
     for includeDirectory in self.includeDirs:
         args.append(f"-I{includeDirectory}")
@@ -411,7 +484,7 @@ def Compile_CPP_Source(self: toolchain.Toolchain, mode: BuildMode, src: Path, sr
 
     for define in self.defines:
         k, v = define
-        args.append(f"-D{k}={v}" if v is not None else f"-D{k}")
+        args.append(f"-D{k}={v}" if v != "" else f"-D{k}")
 
     for includeDirectory in self.includeDirs:
         args.append(f"-I{includeDirectory}")
@@ -468,12 +541,14 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
     
     if mode.target_os == OS.macOS:
         llvm_dsymutil = shutil.which("llvm-dsymutil")
-        if llvm_dsymutil:
-            LLVM_DSYMUTIL = llvm_dsymutil
-        else:
-            LLVM_DSYMUTIL = shutil.which("dsymutil")
-
-        if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
+        if llvm_dsymutil is None:
+            llvm_dsymutil = shutil.which("dsymutil")
+        if llvm_dsymutil is None:
+            toolchain.Require_Tool("llvm-dsymutil")
+            raise RuntimeError("Should not get here")
+    else:
+        llvm_dsymutil = ""
+    LLVM_DSYMUTIL = llvm_dsymutil
 
     if mode.target_os == OS.Windows:
         executable = out_dir / f"{name}.exe"
@@ -556,15 +631,17 @@ def Link_Executable(self: toolchain.Toolchain, mode: BuildMode, objects: list[Pa
 
 def Link_DynamicLibrary(self: toolchain.Toolchain, mode: BuildMode, objects: list[Path], libraries: list[Path], name: str, out_dir: Path, plugin: bool) -> tuple[Path, Path | None, Path | None]:
     CLANGXX = toolchain.Require_Tool("clang++")
-    
+
     if mode.target_os == OS.macOS:
         llvm_dsymutil = shutil.which("llvm-dsymutil")
-        if llvm_dsymutil:
-            LLVM_DSYMUTIL = llvm_dsymutil
-        else:
-            LLVM_DSYMUTIL = shutil.which("dsymutil")
-
-        if not LLVM_DSYMUTIL: toolchain.Require_Tool("llvm-dsymutil")
+        if llvm_dsymutil is None:
+            llvm_dsymutil = shutil.which("dsymutil")
+        if llvm_dsymutil is None:
+            toolchain.Require_Tool("llvm-dsymutil")
+            raise RuntimeError("Should not get here")
+    else:
+        llvm_dsymutil = ""
+    LLVM_DSYMUTIL = llvm_dsymutil
 
     match mode.target_os:
         case OS.Windows:

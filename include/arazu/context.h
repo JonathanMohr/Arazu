@@ -46,16 +46,11 @@ typedef struct Arazu_Allocator
 
 } Arazu_Allocator;
 
-typedef struct Arazu_Context Arazu_Context;
-
-/** Creates context for Arazu functions, shallow copies arguments and returns ARAZU_NULL on failure */
-ARAZU_DETAIL_API Arazu_Context* Arazu_Context_Create(const Arazu_Allocator* allocator, const Arazu_StringPool* stringPool);
-
-/** Destroys and frees a created Arazu context */
-ARAZU_DETAIL_API void Arazu_Context_Destroy(Arazu_Context* ctx);
-
-ARAZU_DETAIL_API const Arazu_Allocator* Arazu_Context_GetAllocator(const Arazu_Context* ctx);
-ARAZU_DETAIL_API const Arazu_StringPool* Arazu_Context_GetStringPool(const Arazu_Context* ctx);
+typedef struct Arazu_Context
+{
+    Arazu_Allocator allocator;
+    Arazu_StringPool stringPool;
+} Arazu_Context;
 
 #ifdef __cplusplus
 }

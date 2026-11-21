@@ -1,15 +1,15 @@
 #ifndef ARAZU_CORE_OBJECT_OBJECT_H
 #define ARAZU_CORE_OBJECT_OBJECT_H
 
-#include "arazu/core/object/symbol.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "../context.h"
-#include "section.h"
-#include "relocation.h"
-#include "symbol.h"
+#include <arazu/context.h>
+
+#include <arazu/object/section.h>
+#include <arazu/object/relocation.h>
+#include <arazu/object/symbol.h>
 
 typedef Arazu_u64 Arazu_Architecture;
 #define ARAZU_ARCHITECTURE_X86 ((Arazu_Architecture)1)

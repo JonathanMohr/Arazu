@@ -96,32 +96,15 @@ extern "C" {
     #define ARAZU_DETAIL_LINUX
 
 #else
-    #error "Unsupported platform"
+    #error "Unsupported OS"
 #endif
 
 
 #define ARAZU_INTERNAL_CONCAT_(a, b) a##b
 #define ARAZU_INTERNAL_CONCAT(a, b) ARAZU_INTERNAL_CONCAT_(a, b)
 
-#if defined(ARAZU_DETAIL_GCC)
-    #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        _Pragma("GCC diagnostic push") \
-        _Pragma("GCC diagnostic ignored \"-Wc2y-extensions\"") \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__) \
-        _Pragma("GCC diagnostic pop")
-#elif defined(ARAZU_DETAIL_CLANG)
-    #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        _Pragma("clang diagnostic push") \
-        _Pragma("clang diagnostic ignored \"-Wc2y-extensions\"") \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__) \
-        _Pragma("clang diagnostic pop")
-#elif defined(ARAZU_DETAIL_MSVC)
-    #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __COUNTER__)
-#else
-    #define ARAZU_INTERNAL_UNIQUE_NAME(base) \
-        ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __LINE__)
-#endif
+#define ARAZU_INTERNAL_UNIQUE_NAME(base) \
+    ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_CONCAT(ARAZU_INTERNAL_, base), __LINE__)
 
 
 #if defined(ARAZU_DETAIL_CPP11)

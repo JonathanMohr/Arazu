@@ -1,6 +1,6 @@
-from ci.defs import BuildContext
-from ci.toolchains.toolchain import Toolchain
-import ci.toolchains.llvm as llvm
+from build.defs import BuildContext
+from build.toolchain.toolchain import Toolchain
+import build.toolchain.llvm as llvm
 
 def Get_LLVM_Toolchain(context: BuildContext) -> Toolchain:
     toolchain = Toolchain(

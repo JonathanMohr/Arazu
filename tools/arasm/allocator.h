@@ -1,7 +1,7 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
 
-#include <arazu/core/context.h>
+#include <arazu/context.h>
 
 #if defined(ARAZU_DETAIL_WINDOWS)
     #include <malloc.h>

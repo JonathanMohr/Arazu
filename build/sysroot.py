@@ -1,4 +1,4 @@
-from ci.defs import OS, ARCH
+from build.defs import OS, ARCH
 
 from pathlib import Path
 import argparse
@@ -13,7 +13,7 @@ import platform
 import os as os_module
 
 SYSROOT_PATH = Path("sysroots")
-TMP_PATH = Path("tmp")
+TMP_PATH = Path(".tmp")
 
 def getSysrootPath(os: OS, arch: ARCH):
     match os:
