@@ -1,5 +1,5 @@
-#ifndef ARAZU_CORE_TYPES_H
-#define ARAZU_CORE_TYPES_H
+#ifndef ARAZU_TYPES_H
+#define ARAZU_TYPES_H
 
 /*
     Arazu_* and ARAZU_* are both fully reserved for this library

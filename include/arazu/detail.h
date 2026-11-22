@@ -1,5 +1,5 @@
-#ifndef ARAZU_CORE_DETAIL_H
-#define ARAZU_CORE_DETAIL_H
+#ifndef ARAZU_DETAIL_H
+#define ARAZU_DETAIL_H
 
 #ifdef __cplusplus
 extern "C" {

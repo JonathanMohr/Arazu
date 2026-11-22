@@ -1,11 +1,10 @@
-#ifndef ARAZU_CORE_CONTEXT_H
-#define ARAZU_CORE_CONTEXT_H
+#ifndef ARAZU_CONTEXT_H
+#define ARAZU_CONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "detail.h"
 #include "types.h"
 
 typedef const void* Arazu_String;

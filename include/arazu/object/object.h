@@ -1,78 +1,63 @@
 #ifndef ARAZU_CORE_OBJECT_OBJECT_H
 #define ARAZU_CORE_OBJECT_OBJECT_H
 
+#include "arazu/types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <arazu/result.h>
 #include <arazu/context.h>
 
 #include <arazu/object/section.h>
 #include <arazu/object/relocation.h>
 #include <arazu/object/symbol.h>
 
+
 typedef Arazu_u64 Arazu_Architecture;
-#define ARAZU_ARCHITECTURE_X86 ((Arazu_Architecture)1)
+#define ARAZU_ARCHITECTURE_X86    ((Arazu_Architecture)1)
+#define ARAZU_ARCHITECTURE_X86_64 ((Arazu_Architecture)2)
+
 
 typedef struct Arazu_Object Arazu_Object;
 
-/** Get size of object struct */
-ARAZU_DETAIL_API Arazu_Size Arazu_Object_Size(void);
 
-/** Returns ARAZU_FALSE on failure */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Create(
-    Arazu_Object* out,
-    const Arazu_Context* ctx,
+typedef struct Arazu_Object_Operations
+{
+    void (*destroy)(Arazu_Object* object);
 
-    Arazu_Architecture architecture,
-    Arazu_u16 bitMode
-);
+    /** Initialize specific section data in sections array */
+    Arazu_Result (*initializeSection)(Arazu_Object* object, const Arazu_Object_Section* section, Arazu_Size index);
 
-/** Free resources of object that was created in-place */
-ARAZU_DETAIL_API void Arazu_Object_Destroy(const Arazu_Context* ctx, Arazu_Object* object);
+    /** Initialize specific symbol data in symbols array */
+    Arazu_Result (*initializeSymbol)(Arazu_Object* object, const Arazu_Object_Symbol* symbol, Arazu_Size index);
 
-/** Copy object */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_Copy(Arazu_Object* out, const Arazu_Context* newCtx, const Arazu_Object* original);
+    Arazu_Size sectionCount;
+    Arazu_Size sectionSize; // Size of section in array
+    void* sections; // Array of struct with Arazu_Object_Section as first element
 
-
-/** Add section, may reserve memory */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_AddSection(const Arazu_Context* ctx, Arazu_Object* object, Arazu_Object_Section* section);
-
-/** Add symbol, may reserve memory */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_AddSymbol(const Arazu_Context* ctx, Arazu_Object* object, Arazu_Object_Symbol* symbol);
+    Arazu_Size symbolCount;
+    Arazu_Size symbolSize; // Size of symbol in array
+    void* symbols; // Array of struct with Arazu_Object_Symbol as first element
+} Arazu_Object_Operations;
 
 
-/** Reserve space for the sections */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_ReserveSectionCount(const Arazu_Context* ctx, Arazu_Object* object, Arazu_Size count);
+struct Arazu_Object
+{
+    const Arazu_Object_Operations* operations;
+    Arazu_Context* context;
 
-/** Reserve space for the symbols */
-ARAZU_DETAIL_API Arazu_Bool Arazu_Object_ReserveSymbolCount(const Arazu_Context* ctx, Arazu_Object* object, Arazu_Size count);
+    void* data;
 
-
-/** Get architecture */
-ARAZU_DETAIL_API Arazu_Architecture Arazu_Object_GetArchitecture(const Arazu_Context* ctx, const Arazu_Object* object);
-
-/** Get bit mode */
-ARAZU_DETAIL_API Arazu_u16 Arazu_Object_GetBitMode(const Arazu_Context* ctx, const Arazu_Object* object);
+    Arazu_Architecture architecture;
+};
 
 
-/** Get section count */
-ARAZU_DETAIL_API Arazu_uValue Arazu_Object_GetSectionCount(const Arazu_Context* ctx, const Arazu_Object* object);
+typedef struct Arazu_Object_Interface
+{
+    Arazu_Result (*createObject)(Arazu_Object* objectOut, const Arazu_Context* context, Arazu_Architecture architecture);
+} Arazu_Object_Interface;
 
-/** Get sections */
-ARAZU_DETAIL_API const Arazu_Object_Section* Arazu_Object_GetSections(const Arazu_Context* ctx, const Arazu_Object* object);
-
-/** Get section by index, returns ARAZU_NULL when out of range */
-ARAZU_DETAIL_API const Arazu_Object_Section* Arazu_Object_GetSection(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index);
-
-/** Get symbol count */
-ARAZU_DETAIL_API Arazu_uValue Arazu_Object_GetSymbolCount(const Arazu_Context* ctx, const Arazu_Object* object);
-
-/** Get symbols */
-ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_GetSymbols(const Arazu_Context* ctx, const Arazu_Object* object);
-
-/** Get symbol by index, returns ARAZU_NULL when out of range */
-ARAZU_DETAIL_API const Arazu_Object_Symbol* Arazu_Object_GetSymbol(const Arazu_Context* ctx, const Arazu_Object* object, Arazu_uValue index);
 
 #ifdef __cplusplus
 }
