@@ -31,14 +31,6 @@ typedef struct Arazu_Object_Operations
 
     /** Initialize specific symbol data in symbols array */
     Arazu_Result (*initializeSymbol)(Arazu_Object* object, const Arazu_Object_Symbol* symbol, Arazu_Size index);
-
-    Arazu_Size sectionCount;
-    Arazu_Size sectionSize; // Size of section in array
-    void* sections; // Array of struct with Arazu_Object_Section as first element
-
-    Arazu_Size symbolCount;
-    Arazu_Size symbolSize; // Size of symbol in array
-    void* symbols; // Array of struct with Arazu_Object_Symbol as first element
 } Arazu_Object_Operations;
 
 
@@ -48,6 +40,14 @@ struct Arazu_Object
     Arazu_Context* context;
 
     void* data;
+
+    Arazu_Size sectionCount;
+    Arazu_Size sectionSize; // Size of section in array
+    void* sections; // Array of struct with Arazu_Object_Section as first element
+
+    Arazu_Size symbolCount;
+    Arazu_Size symbolSize; // Size of symbol in array
+    void* symbols; // Array of struct with Arazu_Object_Symbol as first element
 
     Arazu_Architecture architecture;
 };
